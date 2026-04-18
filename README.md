@@ -1,5 +1,8 @@
 # movement-os
 
+> *In memory of **Leon Eugene Haarhoff** (1973–1993). See [MEMORIAL.md](./MEMORIAL.md).*
+> *No family should have to start from zero.*
+
 **Stand Up South Africa — civic accountability platform.**
 
 `movement-os` is the open-source backbone of the Stand Up South Africa (SASA)
