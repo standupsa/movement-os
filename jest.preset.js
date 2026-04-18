@@ -12,4 +12,12 @@ module.exports = {
     '!src/bin/**',
   ],
   coverageReporters: ['text', 'text-summary', 'json-summary'],
+  coverageThreshold: {
+    global: {
+      lines: 80,
+      branches: 75,
+      statements: 80,
+      functions: 80,
+    },
+  },
 };
