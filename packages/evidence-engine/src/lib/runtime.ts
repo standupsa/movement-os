@@ -13,12 +13,14 @@ import {
 import {
   AgentIdSchema,
   ClaimIdSchema,
+  ClaimExtractorSchema,
   ClaimSchema,
   ClaimSourceRefSchema,
   EvidenceIdSchema,
   EvidenceSchema,
   type AgentId,
   type Claim,
+  type ClaimExtractor,
   type ClaimSourceRef,
   type ClaimStatus,
   type Evidence,
@@ -28,6 +30,9 @@ import { ClaimExtractionOutputSchema } from './extraction-schema.js';
 import { generateUlid } from './ulid.js';
 
 const DEFAULT_ACTOR_ID = AgentIdSchema.parse('agent:evidence-engine');
+const DEFAULT_EXTRACTOR_ID = ClaimExtractorSchema.parse(
+  'agent:evidence-engine',
+);
 const DEFAULT_MAX_CLAIMS = 3;
 const DEFAULT_MAX_OUTPUT_TOKENS = 900;
 const DEFAULT_TIMEOUT_MS = 20_000;
@@ -104,12 +109,14 @@ export interface EvidenceEngine {
 export interface EvidenceEngineConfig {
   readonly provider: ModelProvider;
   readonly actorId?: AgentId;
+  readonly extractorId?: ClaimExtractor;
   readonly now?: () => Date;
   readonly createId?: () => string;
 }
 
 export interface XaiEvidenceEngineConfig extends XaiProviderConfig {
   readonly actorId?: AgentId;
+  readonly extractorId?: ClaimExtractor;
   readonly now?: () => Date;
   readonly createId?: () => string;
 }
@@ -123,6 +130,9 @@ export function createEvidenceEngine(
         provider: config.provider,
         input,
         ...(config.actorId === undefined ? {} : { actorId: config.actorId }),
+        ...(config.extractorId === undefined
+          ? {}
+          : { extractorId: config.extractorId }),
         ...(config.now === undefined ? {} : { now: config.now }),
         ...(config.createId === undefined ? {} : { createId: config.createId }),
       }),
@@ -132,10 +142,11 @@ export function createEvidenceEngine(
 export function createXaiEvidenceEngine(
   config: XaiEvidenceEngineConfig,
 ): EvidenceEngine {
-  const { actorId, now, createId, ...providerConfig } = config;
+  const { actorId, extractorId, now, createId, ...providerConfig } = config;
   return createEvidenceEngine({
     provider: createXaiProvider(providerConfig),
     ...(actorId === undefined ? {} : { actorId }),
+    ...(extractorId === undefined ? {} : { extractorId }),
     ...(now === undefined ? {} : { now }),
     ...(createId === undefined ? {} : { createId }),
   });
@@ -145,11 +156,13 @@ export async function extractClaimsWithProvider(args: {
   readonly provider: ModelProvider;
   readonly input: ExtractionInput;
   readonly actorId?: AgentId;
+  readonly extractorId?: ClaimExtractor;
   readonly now?: () => Date;
   readonly createId?: () => string;
 }): Promise<ExtractionResult> {
   const input = ExtractionInputSchema.parse(args.input);
   const actorId = args.actorId ?? DEFAULT_ACTOR_ID;
+  const extractorId = args.extractorId ?? DEFAULT_EXTRACTOR_ID;
   const now = args.now ?? (() => new Date());
   const createId = args.createId ?? (() => generateUlid(now()));
   const schema = ClaimExtractionOutputSchema({
@@ -174,6 +187,7 @@ export async function extractClaimsWithProvider(args: {
       sourceFetchedAt: input.sourceFetchedAt,
       candidate,
       actorId,
+      extractorId,
       occurredAt,
       providerId: response.provider,
       model: response.model,
@@ -235,6 +249,7 @@ function buildExtractedClaimRecord(args: {
     ReturnType<typeof ClaimExtractionOutputSchema>
   >['claims'][number];
   readonly actorId: AgentId;
+  readonly extractorId: ClaimExtractor;
   readonly occurredAt: string;
   readonly providerId: ModelProvider['id'];
   readonly model: string;
@@ -246,7 +261,7 @@ function buildExtractedClaimRecord(args: {
   const provisionalClaim = ClaimSchema.parse({
     id: claimId,
     text: args.candidate.text,
-    extractedBy: 'agent:evidence-intake',
+    extractedBy: args.extractorId,
     status: requestedStatus,
     sourceRef: args.sourceRef,
     assertedAt: args.occurredAt,
