@@ -43,7 +43,8 @@ Witness South Africa adopts the following operational security model:
 2. The current four-role quorum is **not** defined as a permission
    boundary.
 3. The repository will add lightweight automation that verifies the
-   quorum ceremony happened on the exact current PR head SHA.
+   quorum ceremony happened on the exact current PR head SHA, including
+   after role signatures are posted as PR comments.
 4. The repository will add future-ready review structure now, even where
    it is inert until a second identity exists.
 5. Hardening work will proceed in ranked order, with identity separation
@@ -56,6 +57,7 @@ The repository will support this model with two in-repo artefacts:
 - `CODEOWNERS`, to define the future review surface for critical files
 - `.github/workflows/quorum-audit.yml`, to verify that author,
   reviewer, and controller signatures exist on the current PR head SHA
+  on both PR-synchronize events and later PR-comment events
 
 On v1, `quorum-audit.yml` is report-only. It proves the ceremony is
 happening without yet becoming a required status check. Promotion to a
@@ -91,7 +93,7 @@ This ADR is considered landed when all of the following are true:
 1. A PR can show parseable author, reviewer, and controller role
    signatures on the exact current head SHA.
 2. `CODEOWNERS` exists in the repository root.
-3. `quorum-audit.yml` executes on `pull_request` events.
+3. `quorum-audit.yml` executes on `pull_request` and PR-comment events.
 4. A tracking issue exists for the ranked hardening plan.
 
 ## Non-goals
@@ -112,7 +114,8 @@ Rollout happens in two phases:
 
 - add `CODEOWNERS`
 - add `quorum-audit.yml`
-- run `quorum-audit.yml` as report-only
+- run `quorum-audit.yml` as report-only on PR open/update and on later
+  quorum-comment events
 - observe two clean PR runs
 
 ### Phase 2: enforced

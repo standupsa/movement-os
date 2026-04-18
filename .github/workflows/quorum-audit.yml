@@ -3,24 +3,26 @@ name: quorum-audit
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created, edited]
 
 permissions:
   contents: read
   pull-requests: read
 
 concurrency:
-  group: quorum-audit-${{ github.ref }}
+  group: quorum-audit-${{ github.event_name == 'pull_request' && github.ref || format('pr-{0}', github.event.issue.number) }}
   cancel-in-progress: true
 
 jobs:
   quorum-audit:
+    if: ${{ github.event_name == 'pull_request' || github.event.issue.pull_request != null }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     continue-on-error: true
     env:
       GH_TOKEN: ${{ github.token }}
-      PR_NUMBER: ${{ github.event.pull_request.number }}
-      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      EVENT_NAME: ${{ github.event_name }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
@@ -29,27 +31,35 @@ jobs:
         run: |
           set -euo pipefail
 
-          comments_json="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments")"
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            pr_number="${{ github.event.pull_request.number }}"
+          else
+            pr_number="${{ github.event.issue.number }}"
+          fi
+
+          pr_json="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${pr_number}")"
+          pr_head_sha="$(jq -r '.head.sha' <<<"$pr_json")"
+          comments_json="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${pr_number}/comments")"
 
           author_found="$(
-            jq -r --arg sha "$PR_HEAD_SHA" '
+            jq -r --arg sha "$pr_head_sha" '
               any(.[]; (.body // "") | test("^Agent WS[12]\\b.*\\b" + $sha + "\\b"; "m"))
             ' <<<"$comments_json"
           )"
 
           reviewer_found="$(
-            jq -r --arg sha "$PR_HEAD_SHA" '
+            jq -r --arg sha "$pr_head_sha" '
               any(.[]; (.body // "") | test("^Agent R3:\\s+(no findings on|concur at) " + $sha + "\\b"; "m"))
             ' <<<"$comments_json"
           )"
 
           boss_found="$(
-            jq -r --arg sha "$PR_HEAD_SHA" '
+            jq -r --arg sha "$pr_head_sha" '
               any(.[]; (.body // "") | test("^Agent BOSS:\\s+concur at " + $sha + "\\b"; "m"))
             ' <<<"$comments_json"
           )"
 
-          echo "quorum-audit: author=${author_found} reviewer=${reviewer_found} boss=${boss_found} head=${PR_HEAD_SHA}"
+          echo "quorum-audit: author=${author_found} reviewer=${reviewer_found} boss=${boss_found} head=${pr_head_sha}"
 
           # TODO(ADR-0008): add lifecycle signature enforcement once an explicit lifecycle role exists.
           if [[ "$author_found" != "true" || "$reviewer_found" != "true" || "$boss_found" != "true" ]]; then
