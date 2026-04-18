@@ -70,17 +70,16 @@ packages/
   principles/         # @wsa/principles  — mission + 8 principles (locked)
   schemas/            # @wsa/schemas     — Zod contracts at every boundary
   guardrails/         # @wsa/guardrails  — tone + evidence-promotion gates
-  agent-contracts/    # (next) provider-agnostic Agent/Tool/Session interfaces
-  agent-openai/       # (next) OpenAI Agents SDK adapter — the default
+  agent-contracts/    # @wsa/agent-contracts — provider-agnostic model contract
+  agent-xai/          # @wsa/agent-xai — xAI adapter + telemetry + budget gates
+  events/             # @wsa/events — append-only hash-chain utilities
   agent-anthropic/    # (next) Claude adapter — for parity
-  evidence-engine/    # (next) intake → extract → store (Postgres + pgvector)
+  evidence-engine/    # @wsa/evidence-engine — first xAI-backed extraction runtime
   drafting-engine/    # (next) post/brief/script drafting
   sources/            # (next) primary-source fetchers
   audit/              # (next) append-only signed event log
-workers/
-  intake-worker/      # (next) BullMQ consumer
-  draft-worker/       # (next) BullMQ consumer
-  email-ingest-worker/# (next) Cloudflare Email Worker + R2 ingress
+  email-ingress-worker/# @wsa/email-ingress-worker — CF Email Worker + R2 ingress
+  email-probe/        # @wsa/email-probe — machine-only MX-edge probe
 docs/
   architecture/       # ADRs (see 0001-agent-framework.md)
   ops/                # operational runbooks (DNS, Pages, domain setup)
@@ -102,6 +101,7 @@ Run a single package:
 ```sh
 pnpm nx run @wsa/guardrails:test --runInBand
 pnpm nx run @wsa/principles:build
+pnpm nx run @wsa/evidence-engine:build
 ```
 
 Nx syncs TypeScript project references automatically. If you edit

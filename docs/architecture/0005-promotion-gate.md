@@ -84,6 +84,9 @@ Positive:
   decisions happen.
 - `destroyed-or-missing-record-suspected` becomes a better documented finding
   because the gate warns when the supporting note is missing.
+- The first orchestration consumer (`@wsa/evidence-engine`) can now call the
+  gate immediately after xAI extraction and downgrade blocked promotable
+  statuses before they leak downstream.
 
 Negative:
 
@@ -97,4 +100,7 @@ Negative:
 1. Add `evidence-gate.ts` and exhaustive unit tests in `@wsa/guardrails`.
 2. Wire `@wsa/schemas` and `@wsa/agent-xai` as guardrails dependencies.
 3. Re-export the gate from the package barrel.
-4. Keep the tone gate unchanged.
+4. Consume the gate in the first extraction runtime so blocked promotable
+   statuses are downgraded before callers persist or publish them. Landed in
+   `@wsa/evidence-engine`.
+5. Keep the tone gate unchanged.
