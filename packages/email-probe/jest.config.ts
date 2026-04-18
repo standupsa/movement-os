@@ -20,4 +20,14 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: 'test-output/jest/coverage',
+  // PR #18 baseline CI showed this package missing only the branch target; pin the
+  // current measured floor so regressions fail while broader branch coverage lands later.
+  coverageThreshold: {
+    global: {
+      statements: 88,
+      branches: 70,
+      functions: 80,
+      lines: 91,
+    },
+  },
 };
