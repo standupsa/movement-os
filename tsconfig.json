@@ -26,6 +26,9 @@
     },
     {
       "path": "./packages/email-ingress-worker"
+    },
+    {
+      "path": "./packages/email-probe"
     }
   ]
 }
