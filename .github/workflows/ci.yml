@@ -13,38 +13,87 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Four parallel jobs so the main-branch ruleset can require each as a
+# distinct status check context (lint, typecheck, test, build). The
+# setup block is duplicated deliberately — a reusable action would hide
+# the install step from the required-check surface area without saving
+# meaningful time at this size.
+
 jobs:
-  verify:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Nx sync check
+        run: pnpm nx sync:check
+      - name: Lint
+        run: pnpm nx run-many -t lint -- --max-warnings=0
+
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm nx run-many -t typecheck
+
+  test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - uses: pnpm/action-setup@v4
         with:
           version: 9
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-
       - name: Install
         run: pnpm install --frozen-lockfile
-
-      - name: Nx sync check
-        run: pnpm nx sync:check
-
-      - name: Typecheck
-        run: pnpm nx run-many -t typecheck
-
-      - name: Lint
-        run: pnpm nx run-many -t lint
-
       - name: Test
-        run: pnpm nx run-many -t test --runInBand
+        run: pnpm nx run-many -t test -- --runInBand
 
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
       - name: Build
         run: pnpm nx run-many -t build
