@@ -81,7 +81,7 @@ words from the interview recording and notes. Structure:
 
 ### Step 5 — Platform
 
-- An `Evidence` record is created in `@sasa/schemas` referencing
+- An `Evidence` record is created in `@wsa/schemas` referencing
   the affidavit artefact and the case.
 - An `AuditEvent` of type `evidence.added` is appended to the
   hash-chained log.

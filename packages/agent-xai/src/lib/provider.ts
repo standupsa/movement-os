@@ -22,7 +22,7 @@
  *   - Provider id is hard-coded to `'xai'`. Downstream routing
  *     (ADR-0003 three-lane model) keys off this id; the Grokipedia
  *     non-authoritative rule in `./xai-policy.ts` is enforced by
- *     `@sasa/guardrails` whenever the id appears in an Evidence or
+ *     `@wsa/guardrails` whenever the id appears in an Evidence or
  *     Claim provenance chain.
  *
  *   - `timeoutMs` is enforced with an `AbortController` at the
@@ -41,7 +41,7 @@ import type {
   ModelProvider,
   ModelResponse,
   TokenUsage,
-} from '@sasa/agent-contracts';
+} from '@wsa/agent-contracts';
 import type { z } from 'zod';
 import { mapXaiFinishReason } from './finish-reason.js';
 import { zodToXaiJsonSchema } from './json-schema.js';

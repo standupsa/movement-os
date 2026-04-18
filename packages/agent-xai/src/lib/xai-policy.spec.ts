@@ -6,9 +6,9 @@ import {
   isGrokipediaProhibitedEvidenceKind,
 } from './xai-policy.js';
 
-// Independent of `@sasa/schemas` by design — if EvidenceKindSchema ever
+// Independent of `@wsa/schemas` by design — if EvidenceKindSchema ever
 // grows, this list must be updated deliberately, and the invariant
-// check lives in `@sasa/guardrails` once that package depends on both.
+// check lives in `@wsa/guardrails` once that package depends on both.
 const ALL_EVIDENCE_KINDS_SNAPSHOT: ReadonlyArray<string> = [
   'court-record',
   'government-publication',

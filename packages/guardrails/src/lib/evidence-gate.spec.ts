@@ -5,7 +5,7 @@ import {
   type ClaimStatus,
   type Evidence,
   ulid,
-} from '@sasa/schemas';
+} from '@wsa/schemas';
 import {
   GROKIPEDIA_ALLOWED_EVIDENCE_KIND_SET,
   PRIMARY_SOURCE_EVIDENCE_KINDS,
@@ -29,10 +29,7 @@ function makeClaim(status: ClaimStatus): Claim {
   });
 }
 
-function makeEvidence(
-  id: string,
-  overrides: Partial<Evidence> = {},
-): Evidence {
+function makeEvidence(id: string, overrides: Partial<Evidence> = {}): Evidence {
   return EvidenceSchema.parse({
     id: ulid(id),
     claimId: ulid('CLAIM0'),
@@ -74,7 +71,7 @@ function makePromotionInput(
   };
 }
 
-describe('@sasa/guardrails / checkEvidencePromotion', () => {
+describe('@wsa/guardrails / checkEvidencePromotion', () => {
   describe('active evidence filtering', () => {
     it('ignores superseded evidence', () => {
       const result = checkEvidencePromotion(
@@ -148,7 +145,9 @@ describe('@sasa/guardrails / checkEvidencePromotion', () => {
           ]),
         );
 
-        expect(result.reasons.some((reason) => reason.code === 'R1')).toBe(false);
+        expect(result.reasons.some((reason) => reason.code === 'R1')).toBe(
+          false,
+        );
       },
     );
 
@@ -340,10 +339,10 @@ describe('@sasa/guardrails / checkEvidencePromotion', () => {
             { kind: 'other' },
             { providerIds: ['openai'], modelGenerated: true },
           ),
-          makeEntry(
-            '01JSA7M1C4B6Y8D0E2F4G6H8KP',
-            { supports: 'contradicts', kind: 'court-record' },
-          ),
+          makeEntry('01JSA7M1C4B6Y8D0E2F4G6H8KP', {
+            supports: 'contradicts',
+            kind: 'court-record',
+          }),
         ]),
       );
 
@@ -360,14 +359,11 @@ describe('@sasa/guardrails / checkEvidencePromotion', () => {
             { kind: 'other' },
             { providerIds: ['openai'], modelGenerated: true },
           ),
-          makeEntry(
-            '01JSA7M1C4B6Y8D0E2F4G6H8KR',
-            {
-              supports: 'contradicts',
-              kind: 'court-record',
-              validTo: '2026-04-17T12:00:00+02:00',
-            },
-          ),
+          makeEntry('01JSA7M1C4B6Y8D0E2F4G6H8KR', {
+            supports: 'contradicts',
+            kind: 'court-record',
+            validTo: '2026-04-17T12:00:00+02:00',
+          }),
           makeEntry(
             '01JSA7M1C4B6Y8D0E2F4G6H8KS',
             { kind: 'other' },
@@ -387,10 +383,10 @@ describe('@sasa/guardrails / checkEvidencePromotion', () => {
             { kind: 'other' },
             { providerIds: ['openai'], modelGenerated: true },
           ),
-          makeEntry(
-            '01JSA7M1C4B6Y8D0E2F4G6H8KV',
-            { supports: 'contradicts', kind: 'court-record' },
-          ),
+          makeEntry('01JSA7M1C4B6Y8D0E2F4G6H8KV', {
+            supports: 'contradicts',
+            kind: 'court-record',
+          }),
         ]),
       );
 
@@ -465,7 +461,9 @@ describe('@sasa/guardrails / checkEvidencePromotion', () => {
 
       const summary = summarisePromotionResult(result);
       expect(summary).toContain('[BLOCK] R1');
-      expect(summary).toContain(`evidence=${ulid('01JSA7M1C4B6Y8D0E2F4G6H8M0')}`);
+      expect(summary).toContain(
+        `evidence=${ulid('01JSA7M1C4B6Y8D0E2F4G6H8M0')}`,
+      );
     });
   });
 });

@@ -1,7 +1,7 @@
 # Intake form — field version
 
 Used on first contact with a family, witness, or complainant.
-Mirrors `@sasa/schemas.IntakeSchema` so the field record maps
+Mirrors `@wsa/schemas.IntakeSchema` so the field record maps
 cleanly into the platform. The field worker completes this with the
 source, in plain language, at the source's pace.
 
@@ -100,7 +100,7 @@ the same day.
 
 After the meeting:
 
-1. Convert this record into an `Intake` using `@sasa/schemas`.
+1. Convert this record into an `Intake` using `@wsa/schemas`.
 2. Set `lawfulBasis` per Section C.
 3. Mark Section B contents `never-persist` if Section E triggers
    protection.

@@ -34,7 +34,7 @@ export const ArtefactSchema = z
     createdAt: IsoTimestampSchema,
     createdBy: ArtefactCreatorSchema,
     citedClaims: z.array(ClaimIdSchema).min(0),
-    // Hash of @sasa/principles at time of creation. Verified at publish time.
+    // Hash of @wsa/principles at time of creation. Verified at publish time.
     principlesHash: Sha256HexSchema,
   })
   .strict();

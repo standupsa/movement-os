@@ -1,4 +1,4 @@
-# @sasa/guardrails
+# @wsa/guardrails
 
 Deterministic policy gates for publication and promotion decisions.
 

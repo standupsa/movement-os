@@ -1,14 +1,14 @@
 import {
   GROKIPEDIA_ALLOWED_EVIDENCE_KINDS,
   GROKIPEDIA_PROHIBITED_EVIDENCE_KINDS,
-} from '@sasa/agent-xai';
+} from '@wsa/agent-xai';
 import {
   EvidenceKindSchema,
   type Claim,
   type ClaimStatus,
   type Evidence,
   type EvidenceKind,
-} from '@sasa/schemas';
+} from '@wsa/schemas';
 
 export type ProviderId = 'openai' | 'xai' | 'anthropic' | 'local';
 
@@ -128,10 +128,7 @@ export function checkEvidencePromotion(
       });
     }
 
-    if (
-      input.claim.status === 'conclusive' &&
-      !hasPrimarySourceSupport
-    ) {
+    if (input.claim.status === 'conclusive' && !hasPrimarySourceSupport) {
       reasons.push({
         code: 'R4',
         severity: 'block',
@@ -182,7 +179,9 @@ export function summarisePromotionResult(result: PromotionDecision): string {
   return result.reasons
     .map((reason) => {
       const evidenceSuffix =
-        reason.evidenceId === undefined ? '' : ` (evidence=${reason.evidenceId})`;
+        reason.evidenceId === undefined
+          ? ''
+          : ` (evidence=${reason.evidenceId})`;
       return `[${reason.severity.toUpperCase()}] ${reason.code}: ${reason.message}${evidenceSuffix}`;
     })
     .join('\n');
@@ -203,8 +202,10 @@ function isEvidenceActive(evidence: Evidence, now: string): boolean {
   }
 
   const nowMs = toMillis(now);
-  const validFromMs = evidence.validFrom === null ? null : toMillis(evidence.validFrom);
-  const validToMs = evidence.validTo === null ? null : toMillis(evidence.validTo);
+  const validFromMs =
+    evidence.validFrom === null ? null : toMillis(evidence.validFrom);
+  const validToMs =
+    evidence.validTo === null ? null : toMillis(evidence.validTo);
 
   if (validFromMs !== null && validFromMs > nowMs) {
     return false;

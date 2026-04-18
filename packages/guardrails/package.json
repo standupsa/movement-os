@@ -1,5 +1,5 @@
 {
-  "name": "@sasa/guardrails",
+  "name": "@wsa/guardrails",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
@@ -18,9 +18,9 @@
     "!**/*.tsbuildinfo"
   ],
   "dependencies": {
-    "@sasa/agent-xai": "workspace:*",
-    "@sasa/principles": "workspace:^",
-    "@sasa/schemas": "workspace:*",
+    "@wsa/agent-xai": "workspace:*",
+    "@wsa/principles": "workspace:^",
+    "@wsa/schemas": "workspace:*",
     "tslib": "^2.3.0"
   }
 }

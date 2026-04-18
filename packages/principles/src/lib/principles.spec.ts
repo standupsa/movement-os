@@ -8,7 +8,7 @@ import {
   type PrincipleId,
 } from './principles.js';
 
-describe('@sasa/principles', () => {
+describe('@wsa/principles', () => {
   describe('MISSION', () => {
     // AAA: Arrange / Act / Assert
     it('is the exact v0.1 locked sentence', () => {
@@ -61,7 +61,9 @@ describe('@sasa/principles', () => {
         principles: PRINCIPLES.map((p) => ({ id: p.id, text: p.text })),
         version: VERSION,
       });
-      const expected = createHash('sha256').update(canonical, 'utf8').digest('hex');
+      const expected = createHash('sha256')
+        .update(canonical, 'utf8')
+        .digest('hex');
 
       expect(CONTENT_SHA256).toBe(expected);
     });

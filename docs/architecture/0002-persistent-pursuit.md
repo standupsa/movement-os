@@ -64,7 +64,7 @@ maximum evidential completeness. Every `Claim` carries one of:
   exist and do not; the absence itself is evidence.
 
 This replaces the earlier `unverified | verified | contradicted |
-unverifiable` vocabulary used in `@sasa/schemas` v0.1. Migration is
+unverifiable` vocabulary used in `@wsa/schemas` v0.1. Migration is
 tracked as a follow-up in a separate schema-change ADR.
 
 ### 3. The exhaustion ladder (L0 → L4)
@@ -188,10 +188,10 @@ ethical, non-coercive bounds:
 This ADR is documentation-only. Implementation lands in three focused
 follow-up changes, each with its own verify-before-implement gate:
 
-1. `@sasa/schemas` — add `Case`, `Question`, `MethodAttempt`,
+1. `@wsa/schemas` — add `Case`, `Question`, `MethodAttempt`,
    `HumanLead`, `ConsentRecord`, `ChainOfCustodyEntry`; migrate
    `Claim.status` to the new vocabulary.
-2. `@sasa/case-engine` — pipeline orchestrator, retry policy, pause
+2. `@wsa/case-engine` — pipeline orchestrator, retry policy, pause
    timers, method-effectiveness aggregator.
 3. `docs/field/` — intake form, consent script, interview checklist,
    affidavit workflow, archive-runner workflow, chain-of-custody
@@ -203,7 +203,7 @@ follow-up changes, each with its own verify-before-implement gate:
 - [`MEMORIAL.md`](../../MEMORIAL.md)
 - [`POPIA.md`](../../POPIA.md)
 - [`ACCEPTABLE_USE.md`](../../ACCEPTABLE_USE.md)
-- OHCHR, *Training Manual on Human Rights Monitoring* (Chapter 8,
+- OHCHR, _Training Manual on Human Rights Monitoring_ (Chapter 8,
   Interviewing).
-- UN, *The Minnesota Protocol on the Investigation of Potentially
-  Unlawful Death* (revised 2016).
+- UN, _The Minnesota Protocol on the Investigation of Potentially
+  Unlawful Death_ (revised 2016).

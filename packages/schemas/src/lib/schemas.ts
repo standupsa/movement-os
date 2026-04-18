@@ -1,12 +1,12 @@
 /**
- * @sasa/schemas — compatibility barrel.
+ * @wsa/schemas — compatibility barrel.
  *
  * The original monolith was split into per-entity files under `./`. This
  * barrel re-exports everything so existing `import { ... } from
- * '@sasa/schemas'` callers keep working unchanged.
+ * '@wsa/schemas'` callers keep working unchanged.
  *
  * For new code, prefer importing the specific file directly:
- *   import { IntakeSchema } from '@sasa/schemas/intake.js';
+ *   import { IntakeSchema } from '@wsa/schemas/intake.js';
  */
 
 export * from './ids.js';

@@ -35,7 +35,7 @@
  */
 
 import { z } from 'zod';
-import { IsoTimestampSchema, Sha256HexSchema } from '@sasa/schemas';
+import { IsoTimestampSchema, Sha256HexSchema } from '@wsa/schemas';
 import { EventKindSchema } from './event-kind.js';
 import { EventActorSchema } from './event-actor.js';
 
@@ -83,7 +83,4 @@ export type EventEnvelope = z.infer<typeof EventEnvelopeSchema>;
  * The subset of fields a caller supplies when appending — the chain
  * utility derives `seq`, `prevHash`, and `hash` itself.
  */
-export type EventCandidate = Omit<
-  EventEnvelope,
-  'seq' | 'prevHash' | 'hash'
->;
+export type EventCandidate = Omit<EventEnvelope, 'seq' | 'prevHash' | 'hash'>;

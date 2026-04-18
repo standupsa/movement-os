@@ -3,7 +3,7 @@ import type {
   AgentMessage,
   CompleteArgs,
   ToolSpec,
-} from '@sasa/agent-contracts';
+} from '@wsa/agent-contracts';
 import { createXaiProvider } from './provider.js';
 import type {
   XaiChatCompletion,

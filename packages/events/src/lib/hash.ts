@@ -22,7 +22,7 @@ export const GENESIS_HASH: string = '0'.repeat(64);
 
 /**
  * Lowercase hex SHA-256 of the given UTF-8 string. Output is exactly
- * 64 characters and matches `Sha256HexSchema` from `@sasa/schemas`.
+ * 64 characters and matches `Sha256HexSchema` from `@wsa/schemas`.
  */
 export function sha256Hex(input: string): string {
   return createHash('sha256').update(input, 'utf8').digest('hex');

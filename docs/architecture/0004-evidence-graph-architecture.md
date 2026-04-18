@@ -108,7 +108,7 @@ least five columns:
   at the schema layer.
 
 Claims are additionally tagged with the `confidence` vocabulary
-already shipped in `@sasa/schemas` (ADR-0002's V2 status set).
+already shipped in `@wsa/schemas` (ADR-0002's V2 status set).
 Bi-temporal retrofitting is painful and the platform will never be
 smaller than it is today, so this is a phase-1 schema decision, not
 a future refinement.
@@ -136,7 +136,7 @@ constrains the output to source-cited fields.
 
 ### 5. LLM policy in phase 1: structured extraction only
 
-Agents use `@sasa/agent-contracts` (shipped in `f7260f8`) to perform
+Agents use `@wsa/agent-contracts` (shipped in `f7260f8`) to perform
 exactly three kinds of work in phase 1:
 
 - Structured extraction from raw artifacts into typed `Claim`,
@@ -261,20 +261,20 @@ Implementation is sequenced across follow-up commits, each with its
 own ADR only if a real decision is required. The packages implied
 by this ADR are sketched here, not ratified:
 
-1. `@sasa/events` — canonical event schemas, hash-chain utilities,
+1. `@wsa/events` — canonical event schemas, hash-chain utilities,
    append-only event-log client. Pure TypeScript, no Postgres
    dependency so the schemas stay testable in isolation.
-2. `@sasa/graph-projection` — projector that consumes events and
+2. `@wsa/graph-projection` — projector that consumes events and
    writes nodes and edges into the AGE-backed graph tables. Idempotent
    from the event stream.
-3. `@sasa/retrieval` — hybrid-retrieval API: one `retrieve(query)`
+3. `@wsa/retrieval` — hybrid-retrieval API: one `retrieve(query)`
    entry point that fans out to full-text, pgvector, and openCypher,
    merges results, and returns source-backed hits with provenance.
-4. `@sasa/db-postgres` — thin Postgres client wiring, migrations,
+4. `@wsa/db-postgres` — thin Postgres client wiring, migrations,
    extension bootstrap (AGE, pgvector, pg_trgm), and the projector
    rebuild job.
 
-None of these packages are written yet. The `@sasa/schemas` package
+None of these packages are written yet. The `@wsa/schemas` package
 already carries the V2 claim vocabulary (ADR-0002); adding
 `assertedAt`, `validFrom`, `validTo`, `supersededBy`, and `sourceRef`
 to the relevant entities is the first implementation commit after

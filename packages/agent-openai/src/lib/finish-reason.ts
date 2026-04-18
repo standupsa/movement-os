@@ -1,6 +1,6 @@
 /**
  * Map OpenAI Chat Completions `finish_reason` values onto our normalized
- * `ResponseStatus` enum (ADR-agnostic; see `@sasa/agent-contracts`).
+ * `ResponseStatus` enum (ADR-agnostic; see `@wsa/agent-contracts`).
  *
  * Policy:
  *   stop            → completed   (natural end of generation)
@@ -17,7 +17,7 @@
  * lose provider-specific vocabulary.
  */
 
-import type { ResponseStatus } from '@sasa/agent-contracts';
+import type { ResponseStatus } from '@wsa/agent-contracts';
 
 const COMPLETED_REASONS: ReadonlySet<string> = new Set([
   'stop',

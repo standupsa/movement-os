@@ -92,7 +92,7 @@ importers:
 
   packages/agent-openai:
     dependencies:
-      '@sasa/agent-contracts':
+      '@wsa/agent-contracts':
         specifier: workspace:*
         version: link:../agent-contracts
       tslib:
@@ -107,7 +107,7 @@ importers:
 
   packages/agent-xai:
     dependencies:
-      '@sasa/agent-contracts':
+      '@wsa/agent-contracts':
         specifier: workspace:*
         version: link:../agent-contracts
       tslib:
@@ -122,7 +122,7 @@ importers:
 
   packages/events:
     dependencies:
-      '@sasa/schemas':
+      '@wsa/schemas':
         specifier: workspace:*
         version: link:../schemas
       tslib:
@@ -134,13 +134,13 @@ importers:
 
   packages/guardrails:
     dependencies:
-      '@sasa/agent-xai':
+      '@wsa/agent-xai':
         specifier: workspace:*
         version: link:../agent-xai
-      '@sasa/principles':
+      '@wsa/principles':
         specifier: workspace:^
         version: link:../principles
-      '@sasa/schemas':
+      '@wsa/schemas':
         specifier: workspace:*
         version: link:../schemas
       tslib:

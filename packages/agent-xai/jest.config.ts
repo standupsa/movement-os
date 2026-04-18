@@ -12,7 +12,7 @@ const swcJestConfig = JSON.parse(readFileSync(`${here}/.spec.swcrc`, 'utf-8'));
 swcJestConfig.swcrc = false;
 
 export default {
-  displayName: '@sasa/agent-xai',
+  displayName: '@wsa/agent-xai',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
