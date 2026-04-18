@@ -1,0 +1,27 @@
+{
+  "name": "@wsa/email-probe",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "description": "Machine-only external-SMTP probe for the Witness South Africa email-ingress worker. Sends a tagged email via Resend, polls R2 for the resulting object, asserts the spam-triage metadata is present.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "scripts": {
+    "probe-live": "node ./dist/bin/run-probe.js"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}
