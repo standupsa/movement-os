@@ -40,6 +40,20 @@ jobs:
           --config p/typescript
           --config p/javascript
           --config p/secrets
+          --json
+          --output semgrep.json
+      - name: Report Semgrep findings count
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('semgrep.json')
+          results = json.loads(path.read_text()) if path.exists() else {}
+          findings = results.get('results', [])
+          print(f'semgrep findings: {len(findings)}')
+          PY
 
   gitleaks:
     name: gitleaks
@@ -51,9 +65,23 @@ jobs:
           fetch-depth: 0
       - name: Scan with gitleaks
         continue-on-error: true
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/repo" \
+            -w /repo \
+            ghcr.io/gitleaks/gitleaks:latest \
+            git --report-format json --report-path gitleaks.json --redact .
+      - name: Report gitleaks findings count
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('gitleaks.json')
+          findings = json.loads(path.read_text()) if path.exists() else []
+          print(f'gitleaks findings: {len(findings)}')
+          PY
 
   dependency-review:
     name: dependency-review
@@ -63,9 +91,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Review dependency changes
+        id: review
         continue-on-error: true
         uses: actions/dependency-review-action@v4
         with:
           license-check: true
           vulnerability-check: true
           fail-on-severity: high
+      - name: Report dependency-review findings count
+        if: always()
+        env:
+          VULNERABLE_CHANGES: ${{ steps.review.outputs.vulnerable-changes }}
+          INVALID_LICENSE_CHANGES: ${{ steps.review.outputs.invalid-license-changes }}
+          DENIED_CHANGES: ${{ steps.review.outputs.denied-changes }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+
+          def count(name: str) -> int:
+            raw = os.environ.get(name, '').strip()
+            return len(json.loads(raw)) if raw else 0
+
+          total = (
+            count('VULNERABLE_CHANGES')
+            + count('INVALID_LICENSE_CHANGES')
+            + count('DENIED_CHANGES')
+          )
+          print(f'dependency-review findings: {total}')
+          PY
