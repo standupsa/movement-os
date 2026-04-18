@@ -16,14 +16,4 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: 'test-output/jest/coverage',
-  // PR #18 baseline CI showed this package below the v1 global floor; pin the current
-  // proven baseline until focused tests raise it in a follow-up staircase PR.
-  coverageThreshold: {
-    global: {
-      statements: 75,
-      branches: 58,
-      functions: 68,
-      lines: 77,
-    },
-  },
 };

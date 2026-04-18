@@ -4,7 +4,7 @@ import type {
   ModelResponse,
 } from '@wsa/agent-contracts';
 import { type XaiClient } from '@wsa/agent-xai';
-import { ArtefactIdSchema, ulid } from '@wsa/schemas';
+import { AgentIdSchema, ArtefactIdSchema, ulid } from '@wsa/schemas';
 import type { z } from 'zod';
 import {
   createEvidenceEngine,
@@ -246,5 +246,117 @@ describe('@wsa/evidence-engine', () => {
     expect(result.usage.costInUsdTicks).toBe(12);
     expect(result.items[0]?.evidence.provenance.providerIds).toEqual(['xai']);
     expect(result.items[0]?.evidence.provenance.modelGenerated).toBe(true);
+  });
+
+  it('omits responseId when the provider does not return one and keeps a blocked non-promotable status', async () => {
+    const provider: ModelProvider = {
+      id: 'xai',
+      complete: <TSchema extends z.ZodType>(
+        args: CompleteArgs<TSchema>,
+      ): Promise<ModelResponse<z.infer<TSchema>>> =>
+        Promise.resolve({
+          value: args.schema.parse({
+            summary: 'One insufficient-record extraction.',
+            claims: [
+              {
+                text: 'The source does not contain the official record itself.',
+                status: 'insufficient-record',
+                supports: 'supports',
+                rationale:
+                  'The text describes a refusal but not the record contents.',
+              },
+            ],
+          }),
+          usage: { inputTokens: 17, outputTokens: 4, totalTokens: 21 },
+          provider: 'xai',
+          model: 'grok-4-fast-reasoning',
+          rawFinishReason: 'length',
+          status: 'completed',
+        }),
+    };
+
+    const engine = createEvidenceEngine({
+      provider,
+      actorId: AgentIdSchema.parse('agent:source-verifier'),
+      now: (): Date => FIXED_NOW,
+      createId: fixedIds(ulid('CLAIM4'), ulid('EVID4')),
+    });
+
+    const result = await engine.extractClaims(
+      makeInput({ requestId: 'req-004' }),
+    );
+    const item = result.items[0];
+
+    expect(result.responseId).toBeUndefined();
+    expect(result.rawFinishReason).toBe('length');
+    expect(item?.claim.status).toBe('insufficient-record');
+    expect(item?.auditTrail[0]?.actor).toBe('agent:source-verifier');
+    expect(item?.auditTrail[0]?.detail).not.toHaveProperty('responseId');
+  });
+
+  it('passes explicit maxClaims, maxOutputTokens, and timeoutMs to the provider', async () => {
+    let capturedMaxOutputTokens: number | undefined;
+    let capturedTimeoutMs: number | undefined;
+    let capturedClaimCount: number | undefined;
+
+    const provider: ModelProvider = {
+      id: 'xai',
+      complete: <TSchema extends z.ZodType>(
+        args: CompleteArgs<TSchema>,
+      ): Promise<ModelResponse<z.infer<TSchema>>> => {
+        capturedMaxOutputTokens = args.maxOutputTokens;
+        capturedTimeoutMs = args.timeoutMs;
+        capturedClaimCount = args.schema.parse({
+          summary: 'One extraction under a custom maxClaims cap.',
+          claims: [
+            {
+              text: 'The clerk refused to release the requested record.',
+              status: 'contested',
+              supports: 'supports',
+              rationale: 'The source text directly describes a refusal.',
+            },
+          ],
+        }).claims.length;
+
+        return Promise.resolve({
+          value: args.schema.parse({
+            summary: 'One extraction under a custom maxClaims cap.',
+            claims: [
+              {
+                text: 'The clerk refused to release the requested record.',
+                status: 'contested',
+                supports: 'supports',
+                rationale: 'The source text directly describes a refusal.',
+              },
+            ],
+          }),
+          usage: { inputTokens: 12, outputTokens: 6, totalTokens: 18 },
+          provider: 'xai',
+          model: 'grok-4-fast-reasoning',
+          responseId: 'resp-005',
+          rawFinishReason: 'stop',
+          status: 'completed',
+        });
+      },
+    };
+
+    const engine = createEvidenceEngine({
+      provider,
+      now: (): Date => FIXED_NOW,
+      createId: fixedIds(ulid('CLAIM5'), ulid('EVID5')),
+    });
+
+    await engine.extractClaims(
+      makeInput({
+        requestId: 'req-005',
+        maxClaims: 1,
+        maxOutputTokens: 321,
+        timeoutMs: 4_321,
+      }),
+    );
+
+    expect(capturedMaxOutputTokens).toBe(321);
+    expect(capturedTimeoutMs).toBe(4_321);
+    expect(capturedClaimCount).toBe(1);
   });
 });
