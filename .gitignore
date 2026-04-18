@@ -44,3 +44,16 @@ Thumbs.db
 .github/instructions/nx.instructions.md
 
 test-output
+
+# Hard rule: sponsorship pack, witness material, and anything under
+# _private/ never enters git. Covers the xAI Grokipedia sponsorship
+# pack, CSFS contact material, and any future privacy-scoped artefact
+# that must stay off a public mirror.
+_private/
+**/_private/
+
+# Environment files — never commit populated secrets. `.env.example`
+# remains tracked via an explicit negation below when needed.
+.env
+.env.*
+!.env.example
