@@ -1,0 +1,104 @@
+name: security
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**'
+      - '!docs/**'
+      - '!**.md'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**'
+      - '!docs/**'
+      - '!**.md'
+
+permissions:
+  contents: read
+  pull-requests: read
+  security-events: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semgrep:
+    name: semgrep
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan with Semgrep action
+        continue-on-error: true
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: |
+            p/default
+            p/typescript
+            p/javascript
+            p/secrets
+
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan with gitleaks action
+        continue-on-error: true
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  dependency-review:
+    name: dependency-review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Review dependency changes
+        id: review
+        continue-on-error: true
+        uses: actions/dependency-review-action@v4
+        with:
+          license-check: true
+          vulnerability-check: true
+          fail-on-severity: high
+      - name: Report dependency-review findings count
+        if: always()
+        env:
+          VULNERABLE_CHANGES: ${{ steps.review.outputs.vulnerable-changes }}
+          INVALID_LICENSE_CHANGES: ${{ steps.review.outputs.invalid-license-changes }}
+          DENIED_CHANGES: ${{ steps.review.outputs.denied-changes }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+
+          def count_payload(value) -> int:
+            if isinstance(value, list):
+              return len(value)
+            if isinstance(value, dict):
+              return sum(count_payload(item) for item in value.values())
+            return 0
+
+          def count(name: str) -> int:
+            raw = os.environ.get(name, '').strip()
+            return count_payload(json.loads(raw)) if raw else 0
+
+          total = (
+            count('VULNERABLE_CHANGES')
+            + count('INVALID_LICENSE_CHANGES')
+            + count('DENIED_CHANGES')
+          )
+          print(f'dependency-review findings: {total}')
+          PY
