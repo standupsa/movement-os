@@ -1,14 +1,65 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-ZA">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Witness South Africa</title>
+    <title>
+      Witness South Africa — truth, record, and durable public memory
+    </title>
     <meta
       name="description"
-      content="Witness South Africa is an evidence-first civic accountability platform for truth, record, and durable public memory."
+      content="Witness South Africa is an evidence-first civic accountability platform. Non-partisan. Open source. Built in memory of Leon Eugene Haarhoff."
     />
-    <meta name="theme-color" content="#f7f3eb" />
+    <!-- nosemgrep: missing-integrity -- rel=canonical is a metadata hint; SRI applies only to executable resources (stylesheet/preload/modulepreload/script) per W3C -->
+    <link rel="canonical" href="https://witnesssouthafrica.org/" />
+    <meta name="robots" content="index, follow" />
+
+    <meta
+      name="theme-color"
+      content="#f7f3eb"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#17140f"
+      media="(prefers-color-scheme: dark)"
+    />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Witness South Africa" />
+    <meta property="og:title" content="Witness South Africa" />
+    <meta
+      property="og:description"
+      content="Evidence-first civic accountability platform. Non-partisan. Open source. Built in memory of Leon Eugene Haarhoff."
+    />
+    <meta property="og:locale" content="en_ZA" />
+    <meta property="og:url" content="https://witnesssouthafrica.org/" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Witness South Africa" />
+    <meta
+      name="twitter:description"
+      content="Evidence-first civic accountability platform. Built in memory of Leon Eugene Haarhoff."
+    />
+
+    <link
+      rel="icon"
+      href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="10" fill="%239a3d16"/><text x="32" y="46" font-family="Georgia,serif" font-size="40" font-weight="700" text-anchor="middle" fill="%23f7f3eb">W</text></svg>'
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Witness South Africa",
+        "url": "https://witnesssouthafrica.org",
+        "description": "Evidence-first civic accountability platform for South Africa. Non-partisan. Open source.",
+        "email": "hello@witnesssouthafrica.org",
+        "areaServed": "ZA",
+        "sameAs": ["https://github.com/witness-south-africa"]
+      }
+    </script>
+
     <style>
       :root {
         --paper: #f7f3eb;
@@ -19,6 +70,21 @@
         --accent: #9a3d16;
         --accent-soft: rgba(154, 61, 22, 0.1);
         --shadow: 0 24px 80px rgba(23, 20, 17, 0.12);
+        --focus: #9a3d16;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --paper: #17140f;
+          --ink: #f4ece0;
+          --muted: #a69888;
+          --line: rgba(244, 236, 224, 0.16);
+          --panel: rgba(28, 24, 19, 0.74);
+          --accent: #e59565;
+          --accent-soft: rgba(229, 149, 101, 0.14);
+          --shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+          --focus: #e59565;
+        }
       }
 
       * {
@@ -36,6 +102,18 @@
           linear-gradient(180deg, #fbf8f1 0%, var(--paper) 54%, #efe8da 100%);
       }
 
+      @media (prefers-color-scheme: dark) {
+        html {
+          background:
+            radial-gradient(
+              circle at top left,
+              rgba(229, 149, 101, 0.12),
+              transparent 34%
+            ),
+            linear-gradient(180deg, #1d1811 0%, var(--paper) 54%, #0f0c08 100%);
+        }
+      }
+
       body {
         margin: 0;
         min-height: 100vh;
@@ -43,10 +121,40 @@
         font-family: Georgia, 'Times New Roman', serif;
       }
 
+      a {
+        color: var(--accent);
+      }
+
+      a:focus-visible,
+      button:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 3px;
+      }
+
+      .skip {
+        position: absolute;
+        left: -9999px;
+        top: auto;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+      }
+      .skip:focus {
+        position: static;
+        width: auto;
+        height: auto;
+        padding: 0.6rem 1rem;
+        background: var(--accent);
+        color: var(--paper);
+        text-decoration: none;
+      }
+
       main {
         width: min(100%, 78rem);
         margin: 0 auto;
         padding: 3rem 1.25rem 2rem;
+        display: grid;
+        gap: 1.5rem;
       }
 
       .frame {
@@ -73,11 +181,30 @@
         pointer-events: none;
       }
 
+      @media (prefers-color-scheme: dark) {
+        .frame::before {
+          background:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 48%),
+            repeating-linear-gradient(
+              90deg,
+              transparent 0,
+              transparent 14px,
+              rgba(244, 236, 224, 0.018) 14px,
+              rgba(244, 236, 224, 0.018) 15px
+            );
+        }
+      }
+
       .content {
         position: relative;
         display: grid;
         gap: 2.25rem;
         padding: 2rem;
+      }
+
+      .section-content {
+        position: relative;
+        padding: 1.75rem 2rem;
       }
 
       .eyebrow {
@@ -99,9 +226,15 @@
         letter-spacing: -0.04em;
       }
 
+      .section-title {
+        margin: 0 0 1rem;
+        font-size: clamp(1.5rem, 3vw, 2.1rem);
+        letter-spacing: -0.02em;
+      }
+
       .lede {
         max-width: 42rem;
-        margin: 0;
+        margin: 1.25rem 0 0;
         color: var(--muted);
         font-size: clamp(1.05rem, 2vw, 1.25rem);
         line-height: 1.7;
@@ -117,6 +250,12 @@
         border: 1px solid var(--line);
         background: rgba(255, 255, 255, 0.72);
         padding: 1rem 1rem 0.95rem;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .card {
+          background: rgba(255, 255, 255, 0.04);
+        }
       }
 
       .label {
@@ -141,31 +280,93 @@
         color: var(--accent);
       }
 
-      .contact {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.45rem;
-        width: fit-content;
-        margin-top: 0.4rem;
-        padding: 0.75rem 1rem;
-        border: 1px solid rgba(154, 61, 22, 0.24);
-        background: var(--accent-soft);
-        color: var(--ink);
-        text-decoration: none;
+      .aliases {
+        margin: 0;
+        display: grid;
+        gap: 1.1rem;
+      }
+      .aliases dt {
+        color: var(--muted);
         font:
-          600 0.95rem/1.2 Arial,
+          600 0.78rem/1.2 Arial,
           Helvetica,
           sans-serif;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .aliases dd {
+        margin: 0.3rem 0 0;
+        font-size: 1.05rem;
+      }
+      .aliases dd a {
+        color: var(--accent);
+        text-decoration: none;
+        border-bottom: 1px solid var(--accent-soft);
+      }
+      .aliases dd a:hover {
+        border-bottom-color: var(--accent);
+      }
+
+      .doc-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.55rem;
+      }
+      .doc-list li::before {
+        content: '§';
+        color: var(--muted);
+        display: inline-block;
+        width: 1.5rem;
+      }
+      .doc-list a {
+        color: var(--ink);
+        text-decoration: none;
+        border-bottom: 1px solid var(--line);
+      }
+      .doc-list a:hover {
+        border-bottom-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .memorial .section-content {
+        display: grid;
+        gap: 0.6rem;
+      }
+      .memorial h2 {
+        margin: 0.3rem 0 0;
+        font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+        letter-spacing: -0.02em;
+      }
+      .memorial-dates {
+        margin: 0;
+        color: var(--muted);
+        font-style: italic;
+      }
+      .memorial-body {
+        margin: 0.8rem 0 0;
+        max-width: 46rem;
+        line-height: 1.7;
       }
 
       footer {
         position: relative;
-        margin-top: 1rem;
+        padding: 0 0.25rem;
         color: var(--muted);
         font:
           400 0.92rem/1.6 Arial,
           Helvetica,
           sans-serif;
+      }
+      footer p {
+        margin: 0.4rem 0;
+      }
+      footer a {
+        color: var(--accent);
+      }
+      footer .small {
+        font-size: 0.82rem;
       }
 
       @media (min-width: 860px) {
@@ -174,11 +375,45 @@
           padding: 2.4rem;
         }
       }
+
+      @media print {
+        html,
+        body {
+          background: #fff !important;
+          color: #000 !important;
+        }
+        main {
+          padding: 1rem 0;
+          max-width: none;
+        }
+        .frame,
+        .frame::before,
+        .card {
+          background: none !important;
+          box-shadow: none !important;
+          border-color: #bbb !important;
+        }
+        .skip,
+        .status {
+          display: none !important;
+        }
+        a {
+          color: #000;
+          text-decoration: none;
+        }
+        a[href^='http']::after,
+        a[href^='mailto:']::after {
+          content: ' (' attr(href) ')';
+          font-size: 0.85em;
+          color: #444;
+        }
+      }
     </style>
   </head>
   <body>
-    <main>
-      <section class="frame" aria-labelledby="site-title">
+    <a class="skip" href="#content">Skip to content</a>
+    <main id="content">
+      <header class="frame" aria-labelledby="site-title">
         <div class="content">
           <div>
             <p class="eyebrow">Witness South Africa</p>
@@ -186,41 +421,137 @@
             <p class="lede">
               Witness South Africa is an evidence-first civic accountability
               platform. The public site is under construction. The operating
-              principles, source code, and governance records are already live.
+              principles, source code, and governance records are already live
+              and auditable on GitHub.
             </p>
-            <a class="contact" href="mailto:hello@witnesssouthafrica.org">
-              Contact: hello@witnesssouthafrica.org
-            </a>
           </div>
 
           <aside class="status" aria-label="Project status">
             <section class="card">
               <span class="label">Status</span>
               <p class="value">
-                <strong>Under construction.</strong> The platform foundation is
+                <strong>Under construction.</strong> Platform foundation is
                 live.
               </p>
             </section>
             <section class="card">
-              <span class="label">Public Record</span>
+              <span class="label">Governance</span>
               <p class="value">
-                The codebase and governance trail are published through GitHub.
+                Apache 2.0, POPIA-aware, non-partisan by design.
               </p>
             </section>
             <section class="card">
-              <span class="label">Mission</span>
+              <span class="label">Public record</span>
               <p class="value">
-                Built for evidence, witness protection, and accountable public
-                record.
+                Source, ruleset, and audit trail published on GitHub.
               </p>
             </section>
           </aside>
         </div>
+      </header>
+
+      <section class="frame" aria-labelledby="contact-heading">
+        <div class="section-content">
+          <h2 id="contact-heading" class="section-title">Contact</h2>
+          <dl class="aliases">
+            <dt>General enquiries and press</dt>
+            <dd>
+              <a href="mailto:hello@witnesssouthafrica.org"
+                >hello@witnesssouthafrica.org</a
+              >
+            </dd>
+            <dt>Operational support and reports of misuse</dt>
+            <dd>
+              <a href="mailto:support@witnesssouthafrica.org"
+                >support@witnesssouthafrica.org</a
+              >
+            </dd>
+            <dt>Legal notices, rights-holders, takedown</dt>
+            <dd>
+              <a href="mailto:legal@witnesssouthafrica.org"
+                >legal@witnesssouthafrica.org</a
+              >
+            </dd>
+          </dl>
+        </div>
       </section>
 
+      <nav class="frame" aria-labelledby="record-heading">
+        <div class="section-content">
+          <h2 id="record-heading" class="section-title">Public record</h2>
+          <ul class="doc-list">
+            <li>
+              <a
+                href="https://github.com/witness-south-africa/movement-os/blob/main/MEMORIAL.md"
+                >Memorial — Leon Eugene Haarhoff</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/witness-south-africa/movement-os/blob/main/ACCEPTABLE_USE.md"
+                >Acceptable-use policy</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/witness-south-africa/movement-os/blob/main/CODE_OF_CONDUCT.md"
+                >Code of conduct</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/witness-south-africa/movement-os/blob/main/SECURITY.md"
+                >Security policy</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/witness-south-africa/movement-os/blob/main/POPIA.md"
+                >POPIA and personal information</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/witness-south-africa/movement-os/blob/main/LICENSE"
+                >Apache 2.0 licence</a
+              >
+            </li>
+            <li>
+              <a href="https://github.com/witness-south-africa/movement-os"
+                >Source code and governance trail</a
+              >
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <aside
+        class="frame memorial"
+        aria-labelledby="memorial-heading"
+        lang="en-ZA"
+      >
+        <div class="section-content">
+          <p class="eyebrow">In memoriam</p>
+          <h2 id="memorial-heading">Leon Eugene Haarhoff</h2>
+          <p class="memorial-dates">2 June 1973 — 25 May 1993</p>
+          <p class="memorial-body">
+            The platform is named, in memory, for Leon. It is built for every
+            South African family whose official record and lived record do not
+            match. No family should have to start from zero. Endurance over
+            outrage. Build for years.
+          </p>
+        </div>
+      </aside>
+
       <footer>
-        In memory of Leon Eugene Haarhoff. No family should have to start from
-        zero.
+        <p>
+          Non-partisan, non-racial, constitutional, non-violent. Licensed under
+          <a
+            href="https://github.com/witness-south-africa/movement-os/blob/main/LICENSE"
+            >Apache 2.0</a
+          >.
+        </p>
+        <p class="small">© 2026 Witness South Africa contributors.</p>
       </footer>
     </main>
   </body>
