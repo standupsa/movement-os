@@ -1,7 +1,7 @@
 # Contributing
 
 Thank you for considering a contribution to `movement-os`. This project
-powers the Stand Up South Africa (SASA) civic accountability platform.
+powers the Witness South Africa (WSA) civic accountability platform.
 The bar is deliberately high because the software sits in a sensitive
 space: witness safety, public trust, and the movement's credibility
 all depend on the quality of what lands on `main`.

@@ -1,8 +1,8 @@
 # Acceptable Use Policy
 
 This software — `movement-os` — is released under the Apache License 2.0.
-That licence permits broad use. This document records what the Stand Up
-South Africa (SASA) movement considers ethical use of the software, and
+That licence permits broad use. This document records what the Witness
+South Africa (WSA) movement considers ethical use of the software, and
 what it does not. Use outside these limits is not a licence violation
 but it is a violation of the movement's principles and, in many cases,
 of South African or international law.
@@ -54,7 +54,7 @@ they have read the artefact in full and accept responsibility for it.
 The audit log preserves this attestation. Any fork or modification of
 `movement-os` that removes or bypasses the human-approval gate is outside
 the scope of this AUP and should not be called `movement-os` or
-distributed as part of the Stand Up South Africa movement.
+distributed as part of the Witness South Africa movement.
 
 ## Disclosure
 
@@ -67,5 +67,5 @@ disclosure mechanism will be rejected.
 ## Reporting misuse
 
 If you believe `movement-os` is being misused — inside this project or
-by a fork — please report it to `conduct@standupsa.org` (to be set up).
+by a fork — please report it to `conduct@witnesssouthafrica.org` (to be set up).
 We will investigate, document, and act.

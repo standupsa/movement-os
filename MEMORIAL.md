@@ -51,4 +51,4 @@ That is the operating doctrine. It is encoded in
 
 Endurance over outrage. Build for years.
 
-— Stand Up South Africa contributors
+— Witness South Africa contributors

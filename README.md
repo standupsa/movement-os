@@ -3,9 +3,9 @@
 > *In memory of **Leon Eugene Haarhoff** (1973–1993). See [MEMORIAL.md](./MEMORIAL.md).*
 > *No family should have to start from zero.*
 
-**Stand Up South Africa — civic accountability platform.**
+**Witness South Africa — civic accountability platform.**
 
-`movement-os` is the open-source backbone of the Stand Up South Africa (SASA)
+`movement-os` is the open-source backbone of the Witness South Africa (WSA)
 movement. It is a small, auditable system of AI agents that act as **staff
 for the five pillars** of the movement:
 

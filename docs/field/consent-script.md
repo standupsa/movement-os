@@ -8,7 +8,7 @@ meeting is rescheduled with a trusted interpreter — never improvised.
 
 ## Script — identity and purpose
 
-> My name is _______. I work with Stand Up South Africa. We help
+> My name is _______. I work with Witness South Africa. We help
 > families, witnesses, and ordinary people pursue the truth about
 > things that happened to them or to people they loved, using lawful
 > channels — archives, records requests, courts, and field
