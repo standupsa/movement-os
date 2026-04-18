@@ -29,6 +29,9 @@
     },
     {
       "path": "./packages/email-probe"
+    },
+    {
+      "path": "./packages/evidence-engine"
     }
   ]
 }

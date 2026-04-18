@@ -118,9 +118,13 @@ export const defaultRouting: Record<AgentTaskKind, LlmProviderId> = {
 };
 ```
 
-Routing is runtime config (`config/routing.yaml` + env overrides),
-not hard-coded. The deployment's routing choice is logged as an
-`AuditEvent` at service start.
+The routing table above remains the platform intent, but `movement-os`
+does not yet ship a shared `config/routing.yaml`. The current v0.1
+runtime wiring is package-local: callers choose a provider when they
+construct the runtime that invokes it. The first real consumer is
+`@wsa/evidence-engine`, which uses xAI in the analysis lane for
+structured claim extraction and immediately runs the promotion gate
+before returning results.
 
 ### What xAI **does** on this platform
 
@@ -150,6 +154,21 @@ required provider-layer controls in `@wsa/agent-xai`:
 These controls are deliberately provider-layer primitives, not
 front-page branding. Public Grok/xAI attribution remains false until a
 real production runtime path consumes these controls.
+
+### First runtime consumer
+
+`@wsa/evidence-engine` is the first real runtime consumer of these xAI
+controls. It:
+
+- calls `@wsa/agent-xai` in the `analysis` lane
+- converts model output into typed `Claim` / `Evidence` records
+- immediately runs `checkEvidencePromotion()`
+- downgrades model-requested `high-confidence` / `conclusive` claims to
+  `contested` when the gate blocks them
+
+This is a truthful runtime path in code, not a public deployment claim.
+Public Grok/xAI attribution still remains false until an operator-facing
+deployed surface actually invokes that path.
 
 ### What xAI **does not do alone** on this platform
 
@@ -182,6 +201,8 @@ responsibility. See [`POPIA.md`](../../POPIA.md).
 - Built-in second opinion before any public claim is promoted.
 - Matches ADR-0002's "maximum evidential completeness" doctrine —
   challenge lane is the operational mechanism for it.
+- The first analysis-lane runtime now exists in code without widening
+  the publication surface or weakening the promotion gate.
 
 **Negative / costs.**
 
@@ -193,18 +214,22 @@ responsibility. See [`POPIA.md`](../../POPIA.md).
 
 ## Rollout
 
-Implementation-only, in a follow-up PR, split into small commits:
+Rollout has now partially landed:
 
 1. `@wsa/agent-contracts` — `ModelProvider` interface, `AgentTaskKind`,
    `ModelResponse<T>`.
-2. `@wsa/agent-openai` — OpenAI adapter (reference).
-3. `@wsa/agent-xai` — xAI adapter (thin wrapper, `baseURL
-https://api.x.ai/v1`).
-4. `@wsa/agent-anthropic` — Claude adapter (parity).
-5. Routing config loader + audit-log integration.
-6. Guardrails rule: promotion to `conclusive` / `high-confidence`
+2. `@wsa/agent-xai` — xAI adapter with telemetry / budget controls.
+3. Guardrails rule: promotion to `conclusive` / `high-confidence`
    requires provenance from two distinct providers. Landed in
    ADR-0005 / `@wsa/guardrails`.
+4. `@wsa/evidence-engine` — first real analysis-lane runtime path,
+   consuming `@wsa/agent-xai` and immediately applying the promotion
+   gate before returning audit-ready output.
+5. Remaining follow-ups:
+   - `@wsa/agent-openai` reference adapter
+   - `@wsa/agent-anthropic` parity adapter
+   - deployment-level routing config + audit-log integration
+   - challenge-lane orchestration above the first analysis runtime
 
 ## References
 

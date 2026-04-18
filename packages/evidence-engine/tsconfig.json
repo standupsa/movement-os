@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../schemas"
+    },
+    {
+      "path": "../guardrails"
+    },
+    {
+      "path": "../agent-xai"
+    },
+    {
+      "path": "../agent-contracts"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}
