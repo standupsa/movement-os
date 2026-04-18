@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Witness South Africa</title>
+    <meta
+      name="description"
+      content="Witness South Africa is an evidence-first civic accountability platform for truth, record, and durable public memory."
+    />
+    <meta name="theme-color" content="#f7f3eb" />
+    <style>
+      :root {
+        --paper: #f7f3eb;
+        --ink: #171411;
+        --muted: #6f655b;
+        --line: rgba(23, 20, 17, 0.14);
+        --panel: rgba(255, 255, 255, 0.74);
+        --accent: #9a3d16;
+        --accent-soft: rgba(154, 61, 22, 0.1);
+        --shadow: 0 24px 80px rgba(23, 20, 17, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-height: 100%;
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(154, 61, 22, 0.14),
+            transparent 34%
+          ),
+          linear-gradient(180deg, #fbf8f1 0%, var(--paper) 54%, #efe8da 100%);
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        font-family: Georgia, 'Times New Roman', serif;
+      }
+
+      main {
+        width: min(100%, 78rem);
+        margin: 0 auto;
+        padding: 3rem 1.25rem 2rem;
+      }
+
+      .frame {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .frame::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.78), transparent 48%),
+          repeating-linear-gradient(
+            90deg,
+            transparent 0,
+            transparent 14px,
+            rgba(23, 20, 17, 0.018) 14px,
+            rgba(23, 20, 17, 0.018) 15px
+          );
+        pointer-events: none;
+      }
+
+      .content {
+        position: relative;
+        display: grid;
+        gap: 2.25rem;
+        padding: 2rem;
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: var(--accent);
+        font:
+          600 0.82rem/1.2 Arial,
+          Helvetica,
+          sans-serif;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0.45rem 0 0;
+        max-width: 12ch;
+        font-size: clamp(2.8rem, 7vw, 5.8rem);
+        line-height: 0.95;
+        letter-spacing: -0.04em;
+      }
+
+      .lede {
+        max-width: 42rem;
+        margin: 0;
+        color: var(--muted);
+        font-size: clamp(1.05rem, 2vw, 1.25rem);
+        line-height: 1.7;
+      }
+
+      .status {
+        display: grid;
+        gap: 0.85rem;
+        align-content: start;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.72);
+        padding: 1rem 1rem 0.95rem;
+      }
+
+      .label {
+        display: block;
+        margin-bottom: 0.4rem;
+        color: var(--muted);
+        font:
+          600 0.76rem/1.2 Arial,
+          Helvetica,
+          sans-serif;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .value {
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+
+      .value strong {
+        color: var(--accent);
+      }
+
+      .contact {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        width: fit-content;
+        margin-top: 0.4rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(154, 61, 22, 0.24);
+        background: var(--accent-soft);
+        color: var(--ink);
+        text-decoration: none;
+        font:
+          600 0.95rem/1.2 Arial,
+          Helvetica,
+          sans-serif;
+      }
+
+      footer {
+        position: relative;
+        margin-top: 1rem;
+        color: var(--muted);
+        font:
+          400 0.92rem/1.6 Arial,
+          Helvetica,
+          sans-serif;
+      }
+
+      @media (min-width: 860px) {
+        .content {
+          grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 0.9fr);
+          padding: 2.4rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="frame" aria-labelledby="site-title">
+        <div class="content">
+          <div>
+            <p class="eyebrow">Witness South Africa</p>
+            <h1 id="site-title">Truth, record, and durable public memory.</h1>
+            <p class="lede">
+              Witness South Africa is an evidence-first civic accountability
+              platform. The public site is under construction. The operating
+              principles, source code, and governance records are already live.
+            </p>
+            <a class="contact" href="mailto:hello@witnesssouthafrica.org">
+              Contact: hello@witnesssouthafrica.org
+            </a>
+          </div>
+
+          <aside class="status" aria-label="Project status">
+            <section class="card">
+              <span class="label">Status</span>
+              <p class="value">
+                <strong>Under construction.</strong> The platform foundation is
+                live.
+              </p>
+            </section>
+            <section class="card">
+              <span class="label">Public Record</span>
+              <p class="value">
+                The codebase and governance trail are published through GitHub.
+              </p>
+            </section>
+            <section class="card">
+              <span class="label">Mission</span>
+              <p class="value">
+                Built for evidence, witness protection, and accountable public
+                record.
+              </p>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <footer>
+        In memory of Leon Eugene Haarhoff. No family should have to start from
+        zero.
+      </footer>
+    </main>
+  </body>
+</html>

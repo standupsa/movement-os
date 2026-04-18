@@ -30,21 +30,21 @@ Start with the records below exactly as shown.
 
 GitHub Pages documents these IPs for apex domains:
 
-| Type | Name | Value |
-| --- | --- | --- |
-| `A` | `@` | `185.199.108.153` |
-| `A` | `@` | `185.199.109.153` |
-| `A` | `@` | `185.199.110.153` |
-| `A` | `@` | `185.199.111.153` |
-| `AAAA` | `@` | `2606:50c0:8000::153` |
-| `AAAA` | `@` | `2606:50c0:8001::153` |
-| `AAAA` | `@` | `2606:50c0:8002::153` |
-| `AAAA` | `@` | `2606:50c0:8003::153` |
+| Type   | Name | Value                 |
+| ------ | ---- | --------------------- |
+| `A`    | `@`  | `185.199.108.153`     |
+| `A`    | `@`  | `185.199.109.153`     |
+| `A`    | `@`  | `185.199.110.153`     |
+| `A`    | `@`  | `185.199.111.153`     |
+| `AAAA` | `@`  | `2606:50c0:8000::153` |
+| `AAAA` | `@`  | `2606:50c0:8001::153` |
+| `AAAA` | `@`  | `2606:50c0:8002::153` |
+| `AAAA` | `@`  | `2606:50c0:8003::153` |
 
 ### `www` record
 
-| Type | Name | Value |
-| --- | --- | --- |
+| Type    | Name  | Value                            |
+| ------- | ----- | -------------------------------- |
 | `CNAME` | `www` | `witness-south-africa.github.io` |
 
 After Pages is working, configure the GitHub Pages custom domain as
@@ -92,16 +92,16 @@ be allowed.
 
 Recommended starting records:
 
-| Type | Name | Value |
-| --- | --- | --- |
-| `CAA` | `@` | `0 issue "letsencrypt.org"` |
-| `CAA` | `@` | `0 issuewild "letsencrypt.org"` |
+| Type  | Name | Value                           |
+| ----- | ---- | ------------------------------- |
+| `CAA` | `@`  | `0 issue "letsencrypt.org"`     |
+| `CAA` | `@`  | `0 issuewild "letsencrypt.org"` |
 
 Mail-policy scaffolding for an inbound-only phase:
 
-| Type | Name | Value |
-| --- | --- | --- |
-| `TXT` | `@` | `v=spf1 -all` |
+| Type  | Name     | Value                                                                          |
+| ----- | -------- | ------------------------------------------------------------------------------ |
+| `TXT` | `@`      | `v=spf1 -all`                                                                  |
 | `TXT` | `_dmarc` | `v=DMARC1; p=reject; adkim=s; aspf=s; rua=mailto:legal@witnesssouthafrica.org` |
 
 Revisit SPF/DKIM/DMARC when outbound branded mail is introduced.
@@ -133,6 +133,9 @@ Expected outcomes:
   increase takeover risk.
 - Keep `CNAME` in the publishing source so the intended canonical domain stays
   in-repo.
+- The repo currently ships a minimal root `index.html` placeholder so GitHub
+  Pages serves a live holding page instead of a 404 while the full site is
+  being built.
 - If the Pages custom-domain or HTTPS state sticks after DNS changes, remove
   and re-add the custom domain in GitHub Pages to force a fresh certificate
   issuance attempt.
