@@ -172,6 +172,28 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
 
+  packages/extract-api-worker:
+    dependencies:
+      '@wsa/evidence-engine':
+        specifier: workspace:*
+        version: link:../evidence-engine
+      '@wsa/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+      tslib:
+        specifier: ^2.3.0
+        version: 2.8.1
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20250517.0
+        version: 4.20260418.1
+      '@swc/jest':
+        specifier: ~0.2.38
+        version: 0.2.39(@swc/core@1.5.29(@swc/helpers@0.5.21))
+      wrangler:
+        specifier: ^4.17.0
+        version: 4.83.0(@cloudflare/workers-types@4.20260418.1)
+
   packages/guardrails:
     dependencies:
       '@wsa/agent-xai':

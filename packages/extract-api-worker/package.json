@@ -1,0 +1,23 @@
+{
+  "name": "@wsa/extract-api-worker",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "description": "Private Cloudflare Worker surface for signed Lane-2 evidence extraction per ADR-0007.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "dependencies": {
+    "@wsa/evidence-engine": "workspace:*",
+    "@wsa/schemas": "workspace:*",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250517.0",
+    "@swc/jest": "~0.2.38",
+    "wrangler": "^4.17.0"
+  }
+}
