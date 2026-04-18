@@ -11,6 +11,9 @@
     },
     {
       "path": "./packages/guardrails"
+    },
+    {
+      "path": "./packages/agent-contracts"
     }
   ]
 }

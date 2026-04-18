@@ -39,10 +39,21 @@ export default tseslint.config(
     ],
   },
 
-  // Base JS + typescript-eslint strict (type-checked) for all TS sources.
+  // Base JS recommended — safe to apply globally, no type info needed.
   js.configs.recommended,
-  ...tseslint.configs.strictTypeChecked,
-  ...tseslint.configs.stylisticTypeChecked,
+
+  // typescript-eslint strict + stylistic type-checked. Scoped to TS
+  // source files only so that per-project configs (e.g. `@nx/eslint`
+  // package.json rules) don't inherit TypeScript-parser requirements
+  // and fail when linting JSON with `jsonc-eslint-parser`.
+  ...tseslint.configs.strictTypeChecked.map((c) => ({
+    ...c,
+    files: ['**/*.ts', '**/*.mts', '**/*.cts'],
+  })),
+  ...tseslint.configs.stylisticTypeChecked.map((c) => ({
+    ...c,
+    files: ['**/*.ts', '**/*.mts', '**/*.cts'],
+  })),
 
   // Type-aware parser options. projectService auto-discovers each project's
   // tsconfig, which matches our Nx-per-package layout.
@@ -102,6 +113,15 @@ export default tseslint.config(
       '@typescript-eslint/no-floating-promises': 'off',
       // `as const` in fixtures is idiomatic and safe.
       '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      // Zod's generic `.parse()` flows through as `any` in some
+      // generic-callback contexts (e.g. fake providers that accept an
+      // arbitrary schema). Source code still enforces these — only
+      // test fixtures relax them.
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
     },
   },
 
