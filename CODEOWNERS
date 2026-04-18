@@ -1,0 +1,9 @@
+# Witness South Africa — operational security model (ADR-0008)
+# Future-ready: inert until a second write-capable identity is added.
+
+.github/workflows/** @rhaarhoff
+packages/*/wrangler.toml @rhaarhoff
+docs/architecture/** @rhaarhoff
+CODEOWNERS @rhaarhoff
+**/.env.example @rhaarhoff
+**/*.secret.* @rhaarhoff
