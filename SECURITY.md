@@ -10,7 +10,7 @@ once we start tagging.
 
 **Please do not open a public issue for security vulnerabilities.**
 
-Report privately to `security@standupsa.org` (to be set up). Include:
+Report privately to `security@witnesssouthafrica.org` (to be set up). Include:
 
 1. A description of the vulnerability.
 2. The minimum steps to reproduce it.

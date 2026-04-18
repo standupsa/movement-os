@@ -1,7 +1,7 @@
 {
   "name": "@sasa/root",
   "version": "0.1.0",
-  "description": "Stand Up South Africa — civic accountability platform (monorepo root).",
+  "description": "Witness South Africa — civic accountability platform (monorepo root).",
   "license": "Apache-2.0",
   "private": true,
   "engines": {

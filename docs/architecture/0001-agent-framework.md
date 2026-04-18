@@ -8,7 +8,7 @@
 
 ## Context
 
-Stand Up South Africa (SASA) is building an open-source civic accountability
+Witness South Africa (WSA) is building an open-source civic accountability
 platform in which AI agents act as staff for the five pillars of the movement:
 Cause Council, Evidence Unit, Media Engine, Community Network, Action Wing.
 The platform must:

@@ -148,7 +148,7 @@ whose provenance records only one provider.
 
 xAI's published enterprise terms (SOC 2 Type 2, GDPR, CCPA, zero-
 retention options, data-processor DPA) are sufficient for **Lane 2**
-use in a typical SASA deployment. They are **not** sufficient on their
+use in a typical WSA deployment. They are **not** sufficient on their
 own for **Lane 1**; Lane 1 requires a POPIA-specific assessment per
 deployment. The same principle applies to OpenAI and Anthropic —
 provider terms do not substitute for the operator's POPIA

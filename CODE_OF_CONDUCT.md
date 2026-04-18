@@ -1,6 +1,6 @@
 # Code of Conduct
 
-Stand Up South Africa (SASA) is a non-racial, constitutional, non-violent,
+Witness South Africa (WSA) is a non-racial, constitutional, non-violent,
 truth-first movement. This repository is an extension of that movement.
 If you contribute here, you agree to behave in a way that is consistent
 with the movement's principles.
@@ -39,14 +39,14 @@ We will not tolerate:
 This code applies in every repository space: issues, pull requests,
 discussions, code comments, commit messages, review comments, and any
 community channel (Signal, WhatsApp, mailing list, meeting) that carries
-the SASA name.
+the WSA name.
 
 ## Enforcement
 
-Reports go to the Cause Council at `conduct@standupsa.org` (to be set
-up). The Council will acknowledge receipt within 72 hours and respond
-within 14 days. Possible responses range from a private warning to a
-permanent ban from all SASA spaces and the removal of all contributor
+Reports go to the Cause Council at `conduct@witnesssouthafrica.org`
+(to be set up). The Council will acknowledge receipt within 72 hours and
+respond within 14 days. Possible responses range from a private warning
+to a permanent ban from all WSA spaces and the removal of all contributor
 privileges. Enforcement decisions are recorded (redacted of complainant
 detail) so the community can see that the code is applied consistently.
 
