@@ -1,0 +1,67 @@
+name: quorum-audit
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: quorum-audit-${{ github.event_name == 'pull_request' && github.ref || format('pr-{0}', github.event.issue.number) }}
+  cancel-in-progress: true
+
+jobs:
+  quorum-audit:
+    if: ${{ github.event_name == 'pull_request' || github.event.issue.pull_request != null }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVENT_NAME: ${{ github.event_name }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Verify quorum signatures on current head
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            pr_number="${{ github.event.pull_request.number }}"
+          else
+            pr_number="${{ github.event.issue.number }}"
+          fi
+
+          pr_json="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${pr_number}")"
+          pr_head_sha="$(jq -r '.head.sha' <<<"$pr_json")"
+          comments_json="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${pr_number}/comments")"
+
+          author_found="$(
+            jq -r --arg sha "$pr_head_sha" '
+              any(.[]; (.body // "") | test("^Agent WS[12]\\b.*\\b" + $sha + "\\b"; "m"))
+            ' <<<"$comments_json"
+          )"
+
+          reviewer_found="$(
+            jq -r --arg sha "$pr_head_sha" '
+              any(.[]; (.body // "") | test("^Agent R3:\\s+(no findings on|concur at) " + $sha + "\\b"; "m"))
+            ' <<<"$comments_json"
+          )"
+
+          boss_found="$(
+            jq -r --arg sha "$pr_head_sha" '
+              any(.[]; (.body // "") | test("^Agent BOSS:\\s+concur at " + $sha + "\\b"; "m"))
+            ' <<<"$comments_json"
+          )"
+
+          echo "quorum-audit: author=${author_found} reviewer=${reviewer_found} boss=${boss_found} head=${pr_head_sha}"
+
+          # TODO(ADR-0008): add lifecycle signature enforcement once an explicit lifecycle role exists.
+          if [[ "$author_found" != "true" || "$reviewer_found" != "true" || "$boss_found" != "true" ]]; then
+            exit 1
+          fi
