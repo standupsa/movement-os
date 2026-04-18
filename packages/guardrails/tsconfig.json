@@ -4,7 +4,13 @@
   "include": [],
   "references": [
     {
+      "path": "../agent-xai"
+    },
+    {
       "path": "../principles"
+    },
+    {
+      "path": "../schemas"
     },
     {
       "path": "./tsconfig.lib.json"

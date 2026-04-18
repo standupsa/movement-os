@@ -134,9 +134,15 @@ importers:
 
   packages/guardrails:
     dependencies:
+      '@sasa/agent-xai':
+        specifier: workspace:*
+        version: link:../agent-xai
       '@sasa/principles':
         specifier: workspace:^
         version: link:../principles
+      '@sasa/schemas':
+        specifier: workspace:*
+        version: link:../schemas
       tslib:
         specifier: ^2.3.0
         version: 2.8.1

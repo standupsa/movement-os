@@ -1,6 +1,13 @@
-# guardrails
+# @sasa/guardrails
 
-This library was generated with [Nx](https://nx.dev).
+Deterministic policy gates for publication and promotion decisions.
+
+Current surfaces:
+
+- `checkTone(text)` — outbound rhetoric gate for artefacts
+- `checkEvidencePromotion(input)` — evidence-promotion gate for claim status
+  decisions (`high-confidence`, `conclusive`, and
+  `destroyed-or-missing-record-suspected`)
 
 ## Building
 

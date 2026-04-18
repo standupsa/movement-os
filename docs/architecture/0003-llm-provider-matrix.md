@@ -184,7 +184,8 @@ Implementation-only, in a follow-up PR, split into small commits:
 4. `@sasa/agent-anthropic` — Claude adapter (parity).
 5. Routing config loader + audit-log integration.
 6. Guardrails rule: promotion to `conclusive` / `high-confidence`
-   requires provenance from two distinct providers.
+   requires provenance from two distinct providers. Landed in
+   ADR-0005 / `@sasa/guardrails`.
 
 ## References
 
@@ -248,8 +249,7 @@ The rule is reified in `@sasa/agent-xai`:
 These two lists partition `EvidenceKindSchema` from `@sasa/schemas`
 exactly — no `maybe` bucket. The invariants (frozen, disjoint,
 total) are covered by `xai-policy.spec.ts` at the adapter layer and
-will be re-checked by `@sasa/guardrails` against `EvidenceKindSchema`
-when the promotion rule lands.
+are re-checked by `@sasa/guardrails` against `EvidenceKindSchema`.
 
 ### Consequences
 
