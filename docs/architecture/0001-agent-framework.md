@@ -86,7 +86,12 @@ a platform rewrite.
 - Default inference goes through hosted model APIs, so operators must
   fund model calls in ZAR. Mitigated by (a) per-agent monthly budgets,
   (b) an `agent-ollama` adapter for on-prem operation, (c) cache-aware
-  tracing to avoid redundant calls.
+  tracing to avoid redundant calls. PR-11 reifies this in
+  `@wsa/agent-xai`: every live xAI call can now emit append-only
+  telemetry (`model`, token counts, cached tokens, `costInUsdTicks`,
+  request id, outcome), enforce a hard preflight cap on recorded
+  month-to-date spend, and raise a soft-threshold alert when projected
+  spend crosses the configured warning line.
 
 ### Neutral
 
