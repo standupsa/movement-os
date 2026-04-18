@@ -125,6 +125,9 @@ the same licence; see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
   under the South African Protection of Personal Information Act.
 - [`docs/ops/dns-runbook.md`](./docs/ops/dns-runbook.md) — canonical DNS,
   GitHub Pages, and email-routing setup for `witnesssouthafrica.org`.
+- [`docs/ops/infisical/witness-south-africa/README.md`](./docs/ops/infisical/witness-south-africa/README.md)
+  — local Infisical CLI layout and Cloudflare secret workflow for the
+  `witness-south-africa` domain path.
 
 ## Getting help and getting involved
 
