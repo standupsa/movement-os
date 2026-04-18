@@ -52,31 +52,25 @@ Worker.
 
 ### 2. Preservation
 
-The Worker writes the full raw MIME message to an R2 bucket:
+The Worker writes the full raw MIME message to the R2 bucket `wsa-inbox`.
 
-- bucket: `wsa-inbox`
-- object key pattern:
-  `incoming/YYYY/MM/DD/<received-at-iso>--<recipient>--<random>.eml`
-
-The Worker also writes a compact metadata sidecar:
-
-- key pattern:
-  `incoming/YYYY/MM/DD/<received-at-iso>--<recipient>--<random>.json`
+The evidential artifact is the `.eml` object itself. Indexing and triage data
+live in the object's custom metadata rather than a separate sidecar object.
 
 Minimum metadata fields:
 
-- `receivedAt`
-- `recipient`
-- `sender`
+- `received`
+- `from`
+- `to`
 - `subject`
 - `messageId`
-- `rawSize`
-- `headersSha256`
-- `rawSha256`
-- `storageKey`
-
-The `.eml` object is the evidential artifact. The `.json` object exists for
-indexing and operator visibility.
+- `messageSizeBytes`
+- `spamVerdict`
+- `authVerdict`
+- `spfVerdict`
+- `dkimVerdict`
+- `dmarcVerdict`
+- `headerAnomalies`
 
 ### 3. Failure policy
 
@@ -85,8 +79,8 @@ The Worker must not silently drop mail.
 - If R2 write succeeds, accept the message.
 - If R2 write fails, reject with a temporary SMTP failure so the sender can
   retry.
-- If metadata extraction fails but raw storage succeeds, accept the message and
-  emit a degraded-ingest marker in the sidecar.
+- If triage extraction fails but raw storage succeeds, accept the message and
+  emit a degraded-ingest marker in object metadata.
 
 Durable preservation outranks convenience.
 
@@ -117,7 +111,7 @@ Phase 1 ingress does **not**:
 - run extraction models inline on the email event
 - publish, classify, or route to the case graph automatically
 
-It only preserves and surfaces inbound mail safely.
+It only preserves and deterministically triages inbound mail safely.
 
 ## Consequences
 

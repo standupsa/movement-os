@@ -12,9 +12,25 @@ RFC 822 MIME, per [ADR-0006](../../docs/architecture/0006-email-worker-ingress.m
 2. Generates an R2 key of the form
    `YYYY-MM-DD/HHMMSS-<uuid>-<alias>.eml`.
 3. Writes the raw MIME bytes to R2 with canonical custom metadata
-   (`from`, `to`, `messageId`, `subject`, `received`).
+   (`from`, `to`, `messageId`, `subject`, `received`) plus
+   deterministic triage fields (`spamVerdict`, `authVerdict`,
+   `spfVerdict`, `dkimVerdict`, `dmarcVerdict`, `messageSizeBytes`,
+   `headerAnomalies`).
 4. Returns silently. Senders receive 250 OK from Cloudflare's Email
    Routing layer; the Worker does not forward onward.
+
+The first version of the spam gate is deliberately deterministic and
+auditable:
+
+- `Authentication-Results` / `Received-SPF` parsing for SPF, DKIM, and
+  DMARC verdicts
+- cheap header heuristics only (missing auth/date/message-id, bulk/spam
+  markers, oversized messages, suspicious all-caps subject lines)
+- no external reputation feeds
+- no xAI calls
+
+All mail is still preserved. The verdict only controls downstream
+consumers, not SMTP acceptance.
 
 The Worker is the **first recipient** of inbound mail, satisfying the
 "canonical record starts in the system of record, not in a private
@@ -29,6 +45,10 @@ packages/email-ingress-worker/
 │   └── lib/
 │       ├── key.ts        # R2 key generator
 │       ├── key.spec.ts
+│       ├── auth.ts       # auth header parsing
+│       ├── auth.spec.ts
+│       ├── triage.ts     # deterministic spam/auth classification
+│       ├── triage.spec.ts
 │       ├── ingest.ts     # message -> R2 persistence
 │       └── ingest.spec.ts
 ├── wrangler.toml         # Cloudflare deploy config (bindings, etc.)
@@ -80,4 +100,11 @@ infisical run --env=prod --path=/witness-south-africa --silent -- \
 ```
 
 A new `YYYY-MM-DD/HHMMSS-<uuid>-<alias>.eml` object should appear
-within seconds of the send.
+within seconds of the send. Inspect the object's custom metadata to
+confirm the auth and spam verdicts:
+
+- `spamVerdict=clean|suspect|fail`
+- `authVerdict=pass|suspect|fail|unknown`
+- `spfVerdict`, `dkimVerdict`, `dmarcVerdict`
+- `messageSizeBytes`
+- `headerAnomalies`

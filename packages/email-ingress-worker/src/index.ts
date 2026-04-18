@@ -18,7 +18,8 @@ export interface Env {
  * 1. Generates a deterministic-but-unique R2 key from `now` and the
  *    recipient alias.
  * 2. Writes the raw MIME body with canonical metadata (from, to,
- *    message-id, subject, received).
+ *    message-id, subject, received) plus deterministic auth/triage
+ *    metadata for downstream filtering.
  * 3. Returns silently — senders get 250 OK via CF's Email Routing
  *    layer. The Worker does not forward; the mailbox forwarding of
  *    the bootstrap phase is retired when this Worker is wired to the
