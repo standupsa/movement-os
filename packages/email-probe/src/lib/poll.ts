@@ -43,13 +43,27 @@ interface ListObject {
   readonly key: string;
   readonly size?: number;
   readonly uploaded?: string;
+  readonly last_modified?: string;
+  readonly custom_metadata?: Readonly<Record<string, string>>;
 }
 
 interface ListResponse {
   readonly success?: boolean;
-  readonly result?: {
-    readonly objects?: readonly ListObject[];
-  };
+  readonly result?:
+    | readonly ListObject[]
+    | {
+        readonly objects?: readonly ListObject[];
+      };
+}
+
+function isListObjectArray(value: unknown): value is readonly ListObject[] {
+  return Array.isArray(value);
+}
+
+function isNestedListResult(
+  value: unknown,
+): value is { readonly objects?: readonly ListObject[] } {
+  return typeof value === 'object' && value !== null && 'objects' in value;
 }
 
 interface HeadResult {
@@ -80,7 +94,14 @@ async function listObjects(
     throw new Error(`R2 list failed: HTTP ${String(response.status)}`);
   }
   const body = (await response.json()) as ListResponse;
-  return body.result?.objects ?? [];
+  const result = body.result;
+  if (isListObjectArray(result)) {
+    return result;
+  }
+  if (isNestedListResult(result)) {
+    return result.objects ?? [];
+  }
+  return [];
 }
 
 async function headObject(
@@ -138,19 +159,22 @@ export async function pollForMatch(
       seen.add(o.key);
       lastSeenKeys.push(o.key);
 
-      const head = await headObject(
-        fetchImpl,
-        input.apiToken,
-        input.accountId,
-        input.bucket,
-        o.key,
-      );
-      const meta = head?.customMetadata ?? {};
+      const head =
+        o.custom_metadata === undefined
+          ? await headObject(
+              fetchImpl,
+              input.apiToken,
+              input.accountId,
+              input.bucket,
+              o.key,
+            )
+          : undefined;
+      const meta = o.custom_metadata ?? head?.customMetadata ?? {};
       const subject = meta[SUBJECT_METADATA_KEY] ?? '';
       if (subject.includes(input.runId)) {
         return {
           key: o.key,
-          uploaded: head?.uploaded ?? o.uploaded ?? '',
+          uploaded: head?.uploaded ?? o.uploaded ?? o.last_modified ?? '',
           size: head?.size ?? o.size ?? 0,
           customMetadata: meta,
           elapsedMs: now() - start,
