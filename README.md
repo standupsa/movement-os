@@ -82,6 +82,7 @@ workers/
   draft-worker/       # (next) BullMQ consumer
 docs/
   architecture/       # ADRs (see 0001-agent-framework.md)
+  ops/                # operational runbooks (DNS, Pages, domain setup)
   threat-model/
 ```
 
@@ -122,6 +123,8 @@ the same licence; see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 - [`SECURITY.md`](./SECURITY.md) — how to report vulnerabilities safely.
 - [`POPIA.md`](./POPIA.md) — our commitments around personal information
   under the South African Protection of Personal Information Act.
+- [`docs/ops/dns-runbook.md`](./docs/ops/dns-runbook.md) — canonical DNS,
+  GitHub Pages, and email-routing setup for `standupsa.org`.
 
 ## Getting help and getting involved
 
