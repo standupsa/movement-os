@@ -17,6 +17,9 @@
     },
     {
       "path": "./packages/agent-openai"
+    },
+    {
+      "path": "./packages/agent-xai"
     }
   ]
 }

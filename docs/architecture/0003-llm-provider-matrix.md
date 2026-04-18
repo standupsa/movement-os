@@ -197,3 +197,74 @@ Implementation-only, in a follow-up PR, split into small commits:
   extension point for mixed-provider stacks.
 - ADR-0001, ADR-0002, [`POPIA.md`](../../POPIA.md),
   [`ACCEPTABLE_USE.md`](../../ACCEPTABLE_USE.md).
+
+## Amendment — 2026-04-18: Grokipedia non-authoritative rule
+
+### Context
+
+Since ADR-0003 landed, a product pattern has emerged in which xAI's
+Grok line is used to surface background facts (the informal
+"Grokipedia" mode — the model answering general-knowledge questions
+from its training and browsing rather than from an operator-supplied
+primary source). On an evidence platform built for truth-and-record,
+this pattern is a hazard: an LLM's general-knowledge answer is
+**model-generated text**, not a primary source, regardless of how
+confident the prose sounds.
+
+### Rule
+
+Any Evidence record whose only source is an xAI output (Grokipedia-
+style or otherwise):
+
+1. MUST NOT carry `kind` in
+   `{'court-record', 'government-publication', 'statssa', 'commission'}`.
+   Those kinds imply a primary / official provenance an LLM cannot
+   emit; only summarise or paraphrase.
+2. MAY carry `kind` in `{'news-article', 'other'}`. The `news-article`
+   kind is permitted only when the xAI output is itself a pointer to a
+   named, fetchable article that the platform will retrieve and hash;
+   otherwise use `other`. The `note` field on Evidence SHOULD make the
+   AI-generated nature explicit and reference the upstream prompt / run
+   id.
+3. MUST be corroborated by at least one primary-source Evidence
+   record — that is, a non-xai Evidence of a primary-source `kind`,
+   with its own `url` + `sha256` binding — before the backing `Claim`
+   is promoted to `conclusive` or `high-confidence` (ADR-0002).
+
+The challenge-lane rule from the original decision still applies:
+promotion continues to require a second opinion from a different
+provider. The Grokipedia rule stacks on top — second-opinion alone
+does not satisfy primary-source corroboration.
+
+### Enforcement
+
+The rule is reified in `@sasa/agent-xai`:
+
+- `XAI_NON_AUTHORITATIVE = true`
+- `GROKIPEDIA_PROHIBITED_EVIDENCE_KINDS = ['court-record',
+  'government-publication', 'statssa', 'commission']`
+- `GROKIPEDIA_ALLOWED_EVIDENCE_KINDS = ['news-article', 'other']`
+
+These two lists partition `EvidenceKindSchema` from `@sasa/schemas`
+exactly — no `maybe` bucket. The invariants (frozen, disjoint,
+total) are covered by `xai-policy.spec.ts` at the adapter layer and
+will be re-checked by `@sasa/guardrails` against `EvidenceKindSchema`
+when the promotion rule lands.
+
+### Consequences
+
+**Positive.**
+
+- Closes the "Grok said it, so it must be true" failure mode before
+  it can reach a published Claim.
+- Gives operators a mechanical, testable filter rather than a policy
+  they'd have to remember.
+
+**Negative.**
+
+- Operators cannot short-cut primary-source retrieval by quoting
+  Grokipedia. That is the intent.
+- Legitimate news-article-shaped xAI outputs need a small extra step
+  (fetch + hash the real article) before they become evidence. That
+  step is already required by the ADR-0004 evidence pipeline, so the
+  cost here is zero over the baseline.
