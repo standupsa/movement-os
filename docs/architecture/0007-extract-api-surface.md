@@ -69,11 +69,24 @@ Required headers:
 Signature input:
 
 ```text
-<HTTP method>\n
-<request path>\n
+<HTTP method uppercased>\n
+<raw request path and raw query, exactly as received>\n
 <timestamp>\n
 <sha256(raw body bytes)>
 ```
+
+Canonicalization rules:
+
+- `HTTP method` is uppercased ASCII before signing (for example `POST`)
+- `request path` means the raw path plus raw query string, if present
+  (for example `/v1/extract?mode=fast`)
+- percent-encoding is preserved exactly as received; no path or query
+  normalization is allowed before signing
+- the body hash is the lowercase hexadecimal SHA-256 of the raw request
+  body bytes exactly as received
+- the four-line signing string is encoded as UTF-8 bytes before HMAC
+- line separator is a single LF byte (`0x0A`)
+- there is no trailing newline after the body-hash line
 
 Signing algorithm:
 
