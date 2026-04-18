@@ -29,6 +29,9 @@ export * from './chain-of-custody.js';
 // Claim.status V1 → V2 migration helpers (ADR-0002 vocabulary).
 export * from './migrations/claim-status-v1-to-v2.js';
 
+// Claim shape V2 → V3 migration helpers (ADR-0004 bi-temporal).
+export * from './migrations/claim-v2-to-v3.js';
+
 // Shared test fixtures (deterministic ULIDs). Safe in production builds —
 // no side effects, no I/O.
 export * from './test-fixtures.js';

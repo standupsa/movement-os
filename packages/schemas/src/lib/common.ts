@@ -38,3 +38,61 @@ export const LanguageCodeSchema = z
   .string()
   .regex(/^[a-z]{2,3}(-[A-Z]{2})?$/, 'expected a BCP-47 language code');
 export type LanguageCode = z.infer<typeof LanguageCodeSchema>;
+
+/**
+ * Bi-temporal provenance per ADR-0004.
+ *
+ * Every factual edge in the evidence graph (Claim, Evidence, and any future
+ * Attribution/Relationship entity) carries three time anchors:
+ *
+ *   assertedAt — wall-clock moment the platform committed this assertion
+ *                to the record. System (transaction) time. Immutable; the
+ *                only way it "changes" is via `supersededBy` on a *new*
+ *                record.
+ *   validFrom  — moment the claim is believed to become true in the
+ *                world. Valid time. `null` means "unknown start".
+ *   validTo    — moment the claim ceases to be true. `null` means
+ *                "ongoing or unknown end".
+ *
+ * Cross-field rule: when both `validFrom` and `validTo` are set,
+ * `validFrom <= validTo`.
+ *
+ * This primitive is merged into entity schemas via `.merge()`. The
+ * supersession pointer (`supersededBy`) is entity-typed and stays on the
+ * owning schema — bi-temporal is a shared shape, supersession is not.
+ */
+export const BiTemporalFieldsSchema = z
+  .object({
+    assertedAt: IsoTimestampSchema,
+    validFrom: IsoTimestampSchema.nullable(),
+    validTo: IsoTimestampSchema.nullable(),
+  })
+  .refine(
+    (v) => {
+      if (v.validFrom === null || v.validTo === null) {
+        return true;
+      }
+      return v.validFrom <= v.validTo;
+    },
+    { message: 'validFrom must be <= validTo', path: ['validTo'] },
+  );
+export type BiTemporalFields = z.infer<typeof BiTemporalFieldsSchema>;
+
+/**
+ * Plain-object form of the bi-temporal fields for use with `.merge()`.
+ * Refinement is applied at the entity level after the merge so per-entity
+ * cross-field rules compose with the bi-temporal rule.
+ */
+export const BiTemporalFieldsObjectSchema = z.object({
+  assertedAt: IsoTimestampSchema,
+  validFrom: IsoTimestampSchema.nullable(),
+  validTo: IsoTimestampSchema.nullable(),
+});
+
+/** Shared refinement: validFrom <= validTo when both are set. */
+export function refineBiTemporal(v: BiTemporalFields): boolean {
+  if (v.validFrom === null || v.validTo === null) {
+    return true;
+  }
+  return v.validFrom <= v.validTo;
+}
