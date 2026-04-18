@@ -69,7 +69,7 @@ apps/
 packages/
   principles/         # @sasa/principles  — mission + 8 principles (locked)
   schemas/            # @sasa/schemas     — Zod contracts at every boundary
-  guardrails/         # @sasa/guardrails  — tone-gate, principle enforcement
+  guardrails/         # @sasa/guardrails  — tone + evidence-promotion gates
   agent-contracts/    # (next) provider-agnostic Agent/Tool/Session interfaces
   agent-openai/       # (next) OpenAI Agents SDK adapter — the default
   agent-anthropic/    # (next) Claude adapter — for parity
