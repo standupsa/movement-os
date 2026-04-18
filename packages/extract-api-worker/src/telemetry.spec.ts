@@ -104,4 +104,27 @@ describe('@wsa/extract-api-worker/telemetry', () => {
       totalTokens: 0,
     });
   });
+
+  it('omits costInUsdTicks when the provider does not return a cost', () => {
+    expect(
+      buildSuccessTelemetryRecord({
+        keyId: 'OP01',
+        input,
+        sourceByteLength: 27,
+        result: {
+          requestId: 'req-001',
+          summary: 'summary',
+          provider: 'xai',
+          model: 'grok-4-fast-reasoning',
+          status: 'completed',
+          usage: {
+            inputTokens: 10,
+            outputTokens: 4,
+            totalTokens: 14,
+          },
+          items: [],
+        },
+      }),
+    ).not.toHaveProperty('costInUsdTicks');
+  });
 });

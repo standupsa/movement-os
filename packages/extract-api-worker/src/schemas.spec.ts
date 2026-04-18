@@ -78,22 +78,58 @@ describe('@wsa/extract-api-worker/schemas', () => {
               fetchedAt: '2026-04-18T19:00:00.000Z',
               sha256: 'a'.repeat(64),
               supports: 'supports',
+              note: 'Model-generated extraction candidate from xai/grok-4-fast-reasoning.',
               assertedAt: '2026-04-18T19:00:00.000Z',
               validFrom: null,
               validTo: null,
             },
             provenance: { providerIds: ['xai'], modelGenerated: true },
           },
-          promotion: { ok: true, reasons: [], activeEvidence: [] },
+          promotion: {
+            ok: false,
+            reasons: [
+              {
+                code: 'R2',
+                severity: 'block',
+                message:
+                  'xAI-only model-output evidence requires corroboration.',
+                evidenceId: EvidenceIdSchema.parse(ulid('EVID1')),
+              },
+            ],
+            activeEvidence: [
+              {
+                evidence: {
+                  id: EvidenceIdSchema.parse(ulid('EVID2')),
+                  claimId: ClaimIdSchema.parse(ulid('CLM01')),
+                  kind: 'other',
+                  url: 'https://example.org/source',
+                  fetchedAt: '2026-04-18T19:00:00.000Z',
+                  sha256: 'b'.repeat(64),
+                  supports: 'supports',
+                  note: 'from xai',
+                  assertedAt: '2026-04-18T19:00:00.000Z',
+                  validFrom: null,
+                  validTo: null,
+                },
+                provenance: { providerIds: ['xai'], modelGenerated: true },
+              },
+            ],
+          },
           auditTrail: [],
         },
       ],
     });
 
-    expect(response.claims[0]?.promotionDecision.ok).toBe(true);
+    expect(response.claims[0]?.promotionDecision.ok).toBe(false);
     expect(
       (response as unknown as Record<string, unknown>).provider,
     ).toBeUndefined();
     expect(response.claims[0]?.effectiveStatus).toBe('contested');
+    expect(response.claims[0]?.promotionDecision).toEqual({
+      ok: false,
+      reasons: [{ code: 'R2', severity: 'block' }],
+    });
+    expect(response.claims[0]?.evidencePreview).not.toHaveProperty('note');
+    expect(JSON.stringify(response)).not.toContain('xai');
   });
 });

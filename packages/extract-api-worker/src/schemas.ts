@@ -21,9 +21,17 @@ export interface ExtractRequestEnvelope {
 export interface ExtractResponseClaim {
   readonly requestedStatus: ClaimStatus;
   readonly effectiveStatus: ClaimStatus;
-  readonly promotionDecision: ExtractedClaimRecord['promotion'];
+  readonly promotionDecision: PublicPromotionDecision;
   readonly claim: Claim;
   readonly evidencePreview: EvidencePreview;
+}
+
+export interface PublicPromotionDecision {
+  readonly ok: boolean;
+  readonly reasons: ReadonlyArray<{
+    readonly code: ExtractedClaimRecord['promotion']['reasons'][number]['code'];
+    readonly severity: ExtractedClaimRecord['promotion']['reasons'][number]['severity'];
+  }>;
 }
 
 export interface EvidencePreview {
@@ -33,7 +41,6 @@ export interface EvidencePreview {
   readonly fetchedAt: string;
   readonly sha256: string;
   readonly supports: Evidence['supports'];
-  readonly note?: string;
 }
 
 export interface ExtractResponseEnvelope {
@@ -115,7 +122,13 @@ export function mapExtractionResultToResponse(
     claims: result.items.map((item) => ({
       requestedStatus: item.requestedStatus,
       effectiveStatus: item.claim.status,
-      promotionDecision: item.promotion,
+      promotionDecision: {
+        ok: item.promotion.ok,
+        reasons: item.promotion.reasons.map((reason) => ({
+          code: reason.code,
+          severity: reason.severity,
+        })),
+      },
       claim: item.claim,
       evidencePreview: toEvidencePreview(item.evidence.evidence),
     })),
@@ -130,7 +143,6 @@ function toEvidencePreview(evidence: Evidence): EvidencePreview {
     fetchedAt: evidence.fetchedAt,
     sha256: evidence.sha256,
     supports: evidence.supports,
-    ...(evidence.note === undefined ? {} : { note: evidence.note }),
   };
 }
 

@@ -1,5 +1,11 @@
 import { createWorker } from './index.js';
 
+class FakeBucket {
+  put(): Promise<void> {
+    return Promise.resolve();
+  }
+}
+
 async function dispatch(
   request: Request,
   env: {
@@ -119,8 +125,9 @@ describe('@wsa/extract-api-worker/index', () => {
         }),
       }),
       {
-        WSA_TELEMETRY: {} as R2Bucket,
+        WSA_TELEMETRY: new FakeBucket() as unknown as R2Bucket,
         OPERATOR_RATE_LIMITER: {} as DurableObjectNamespace,
+        XAI_BUDGET_MONTHLY_CAP_USD_TICKS: '100',
       } as never,
       {} as ExecutionContext,
     );

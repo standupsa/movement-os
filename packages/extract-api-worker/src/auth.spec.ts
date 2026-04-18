@@ -6,6 +6,9 @@ import {
 } from './auth.js';
 import type { AuthError } from './auth.js';
 
+const NOW = new Date('2024-04-18T16:20:00.000Z');
+const CURRENT_TIMESTAMP = String(Math.floor(NOW.getTime() / 1000));
+
 function buildSignedRequest(args: {
   readonly body: string;
   readonly keyId?: string;
@@ -20,7 +23,7 @@ function buildSignedRequest(args: {
     args.bodyHashOverride ??
     createHash('sha256').update(args.body, 'utf8').digest('hex');
   const keyId = args.keyId ?? 'OP01';
-  const timestamp = args.timestamp ?? '1713462000';
+  const timestamp = args.timestamp ?? CURRENT_TIMESTAMP;
   const pathAndQuery = args.pathAndQuery ?? '/v1/extract?mode=fast';
   const method = args.method ?? 'POST';
   const secret = args.secret ?? 'top-secret';
@@ -59,7 +62,7 @@ describe('@wsa/extract-api-worker/auth', () => {
     const result = await verifySignedRequest(
       request,
       { OPERATOR_HMAC_KEY_OP01: 'top-secret' },
-      new Date('2024-04-18T16:20:00.000Z'),
+      NOW,
     );
 
     expect(result.keyId).toBe('OP01');
@@ -85,7 +88,7 @@ describe('@wsa/extract-api-worker/auth', () => {
       verifySignedRequest(
         buildSignedRequest({ body: '{}', timestamp: '1713460000' }),
         { OPERATOR_HMAC_KEY_OP01: 'top-secret' },
-        new Date('2024-04-18T16:20:00.000Z'),
+        NOW,
       ),
     ).rejects.toMatchObject({
       reason: 'stale_timestamp',
@@ -100,7 +103,7 @@ describe('@wsa/extract-api-worker/auth', () => {
           bodyHashOverride: 'b'.repeat(64),
         }),
         { OPERATOR_HMAC_KEY_OP01: 'top-secret' },
-        new Date('2024-04-18T16:20:00.000Z'),
+        NOW,
       ),
     ).rejects.toMatchObject({
       reason: 'body_hash_mismatch',
@@ -112,7 +115,7 @@ describe('@wsa/extract-api-worker/auth', () => {
       verifySignedRequest(
         buildSignedRequest({ body: '{}', keyId: 'MISSING' }),
         { OPERATOR_HMAC_KEY_OP01: 'top-secret' },
-        new Date('2024-04-18T16:20:00.000Z'),
+        NOW,
       ),
     ).rejects.toMatchObject({
       reason: 'unknown_key_id',
@@ -127,11 +130,69 @@ describe('@wsa/extract-api-worker/auth', () => {
           signatureOverride: 'a'.repeat(64),
         }),
         { OPERATOR_HMAC_KEY_OP01: 'top-secret' },
-        new Date('2024-04-18T16:20:00.000Z'),
+        NOW,
       ),
     ).rejects.toMatchObject({
       reason: 'signature_mismatch',
     } satisfies Partial<AuthError>);
+  });
+
+  it('supports key identifiers that sanitize to underscore env names', async () => {
+    const request = buildSignedRequest({
+      body: '{}',
+      keyId: 'OPS-01',
+    });
+
+    const result = await verifySignedRequest(
+      request,
+      { OPERATOR_HMAC_KEY_OPS_01: 'top-secret' },
+      NOW,
+    );
+
+    expect(result.keyId).toBe('OPS-01');
+  });
+
+  it('rejects invalid timestamp headers', async () => {
+    await expect(
+      verifySignedRequest(
+        buildSignedRequest({
+          body: '{}',
+          timestamp: 'not-a-number',
+        }),
+        { OPERATOR_HMAC_KEY_OP01: 'top-secret' },
+        NOW,
+      ),
+    ).rejects.toMatchObject({
+      reason: 'stale_timestamp',
+    } satisfies Partial<AuthError>);
+  });
+
+  it('rejects invalid signature header formats', async () => {
+    const request = buildSignedRequest({
+      body: '{}',
+      signatureOverride: 'not-hex',
+    });
+
+    await expect(
+      verifySignedRequest(
+        request,
+        { OPERATOR_HMAC_KEY_OP01: 'top-secret' },
+        NOW,
+      ),
+    ).rejects.toMatchObject({
+      reason: 'missing_signature_headers',
+    } satisfies Partial<AuthError>);
+  });
+
+  it('canonicalizes methods and hashes as required by the ADR', () => {
+    expect(
+      canonicalizeSignatureInput(
+        'post',
+        '/v1/extract?mode=fast',
+        CURRENT_TIMESTAMP,
+        'ABCD',
+      ),
+    ).toBe(`POST\n/v1/extract?mode=fast\n${CURRENT_TIMESTAMP}\nabcd`);
   });
 
   it('extracts the raw path and query without stripping encoding', () => {
@@ -140,5 +201,11 @@ describe('@wsa/extract-api-worker/auth', () => {
         'https://extract-api.witnesssouthafrica.org/v1/extract?source=%2Fdoc%20one',
       ),
     ).toBe('/v1/extract?source=%2Fdoc%20one');
+  });
+
+  it('returns / when the request URL has no explicit path suffix', () => {
+    expect(
+      extractRawPathAndQuery('https://extract-api.witnesssouthafrica.org'),
+    ).toBe('/');
   });
 });

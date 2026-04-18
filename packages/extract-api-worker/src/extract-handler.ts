@@ -18,6 +18,7 @@ import {
 } from './rate-limiter.js';
 import {
   type ExtractRequestEnvelope,
+  ExtractRequestValidationError,
   mapExtractionResultToResponse,
   parseExtractRequestEnvelope,
 } from './schemas.js';
@@ -112,6 +113,9 @@ export async function handleExtractRequest(
   } catch (error) {
     if (error instanceof AuthError) {
       return jsonResponse(401, { reason: error.reason });
+    }
+    if (error instanceof ExtractRequestValidationError) {
+      return jsonResponse(error.status, { reason: error.reason });
     }
     if (error instanceof RateLimitedError) {
       return jsonResponse(429, { reason: error.reason });
@@ -215,7 +219,14 @@ function readRequiredString(value: string | undefined, name: string): string {
 }
 
 function parseJsonValue(rawBody: string): unknown {
-  return JSON.parse(rawBody) as unknown;
+  try {
+    return JSON.parse(rawBody) as unknown;
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new ExtractRequestValidationError('request body must be valid JSON');
+    }
+    throw error;
+  }
 }
 
 function jsonResponse(status: number, body: unknown): Response {
