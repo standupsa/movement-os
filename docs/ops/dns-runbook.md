@@ -19,8 +19,8 @@ Repo-side runbook for the Witness South Africa public domain.
 - Cloudflare is the authoritative nameserver for the domain.
 - A hardened existing inbox is available as the Cloudflare Email Routing
   destination.
-- GitHub organization: `standupsa`
-- GitHub Pages target repo: `standupsa/movement-os`
+- GitHub organization: `witness-south-africa`
+- GitHub Pages target repo: `witness-south-africa/movement-os`
 
 ## 1. GitHub Pages DNS records
 
@@ -45,7 +45,7 @@ GitHub Pages documents these IPs for apex domains:
 
 | Type | Name | Value |
 | --- | --- | --- |
-| `CNAME` | `www` | `standupsa.github.io` |
+| `CNAME` | `www` | `witness-south-africa.github.io` |
 
 After Pages is working, configure the GitHub Pages custom domain as
 `witnesssouthafrica.org` and enforce the redirect from `www` to apex in the Pages
@@ -56,10 +56,10 @@ settings.
 Verify the domain at the GitHub organization level before treating it as
 live:
 
-1. GitHub -> `standupsa` organization settings -> `Pages` -> `Add a domain`
+1. GitHub -> `witness-south-africa` organization settings -> `Pages` -> `Add a domain`
 2. Enter `witnesssouthafrica.org`
 3. GitHub will show a TXT record under
-   `_github-pages-challenge-standupsa.witnesssouthafrica.org`
+   `_github-pages-challenge-witness-south-africa.witnesssouthafrica.org`
 4. Add that TXT record in Cloudflare
 5. Wait for DNS to propagate, then complete verification in GitHub
 
@@ -114,7 +114,7 @@ Use these checks from a terminal after DNS changes propagate:
 dig witnesssouthafrica.org +noall +answer -t A
 dig witnesssouthafrica.org +noall +answer -t AAAA
 dig www.witnesssouthafrica.org +noall +answer -t CNAME
-dig _github-pages-challenge-standupsa.witnesssouthafrica.org +noall +answer -t TXT
+dig _github-pages-challenge-witness-south-africa.witnesssouthafrica.org +noall +answer -t TXT
 dig witnesssouthafrica.org +noall +answer -t CAA
 dig _dmarc.witnesssouthafrica.org +noall +answer -t TXT
 ```
@@ -122,7 +122,7 @@ dig _dmarc.witnesssouthafrica.org +noall +answer -t TXT
 Expected outcomes:
 
 - Apex resolves to the four GitHub Pages `A` records and four `AAAA` records
-- `www` resolves to `standupsa.github.io`
+- `www` resolves to `witness-south-africa.github.io`
 - The GitHub challenge TXT is visible before verification
 - `CAA` includes `letsencrypt.org`
 - `_dmarc` is present
@@ -133,9 +133,6 @@ Expected outcomes:
   increase takeover risk.
 - Keep `CNAME` in the publishing source so the intended canonical domain stays
   in-repo.
-- Until the GitHub organization is renamed, the `www` CNAME and the
-  `_github-pages-challenge-standupsa` label will still reference
-  `standupsa`. Update both after the org rename lands.
 - If the Pages custom-domain or HTTPS state sticks after DNS changes, remove
   and re-add the custom domain in GitHub Pages to force a fresh certificate
   issuance attempt.
