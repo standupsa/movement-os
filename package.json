@@ -1,0 +1,56 @@
+{
+  "name": "@sasa/root",
+  "version": "0.1.0",
+  "description": "Stand Up South Africa — civic accountability platform (monorepo root).",
+  "license": "Apache-2.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "build": "nx run-many -t build",
+    "test": "nx run-many -t test",
+    "lint": "nx run-many -t lint",
+    "typecheck": "nx run-many -t typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@nx/eslint": "21.6.11",
+    "@nx/eslint-plugin": "21.6.11",
+    "@nx/jest": "21.6.11",
+    "@nx/js": "21.6.11",
+    "@swc-node/register": "~1.9.1",
+    "@swc/core": "~1.5.7",
+    "@swc/helpers": "~0.5.11",
+    "@swc/jest": "~0.2.38",
+    "@types/jest": "^30.0.0",
+    "@types/node": "~22.10.0",
+    "eslint": "~9.17.0",
+    "jest": "^30.0.0",
+    "jest-environment-node": "^30.0.2",
+    "jest-util": "^30.0.2",
+    "nx": "21.6.11",
+    "prettier": "^3.4.2",
+    "ts-jest": "^29.2.5",
+    "ts-node": "10.9.1",
+    "tslib": "^2.8.1",
+    "typescript": "~5.6.3",
+    "typescript-eslint": "^8.19.0",
+    "verdaccio": "^6.0.5"
+  },
+  "nx": {
+    "includedScripts": [],
+    "targets": {
+      "local-registry": {
+        "executor": "@nx/js:verdaccio",
+        "options": {
+          "port": 4873,
+          "config": ".verdaccio/config.yml",
+          "storage": "tmp/local-registry/storage"
+        }
+      }
+    }
+  }
+}

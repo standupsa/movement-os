@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/principles"
+    },
+    {
+      "path": "./packages/schemas"
+    },
+    {
+      "path": "./packages/guardrails"
+    }
+  ]
+}
