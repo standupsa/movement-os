@@ -5,6 +5,7 @@ import type {
   ToolSpec,
 } from '@wsa/agent-contracts';
 import { createXaiProvider } from './provider.js';
+import { XaiBudgetExceededError } from './telemetry.js';
 import type {
   XaiChatCompletion,
   XaiChatCompletionRequest,
@@ -41,6 +42,10 @@ function fakeCompletion(
       prompt_tokens: 17,
       completion_tokens: 9,
       total_tokens: 26,
+      prompt_tokens_details: {
+        cached_tokens: 11,
+      },
+      cost_in_usd_ticks: 12345,
     },
   };
 }
@@ -106,6 +111,8 @@ describe('createXaiProvider', () => {
       inputTokens: 17,
       outputTokens: 9,
       totalTokens: 26,
+      cachedInputTokens: 11,
+      costInUsdTicks: 12345,
     });
   });
 
@@ -140,6 +147,27 @@ describe('createXaiProvider', () => {
     expect(call.request.response_format?.json_schema.schema).toMatchObject({
       type: 'object',
     });
+  });
+
+  it('collapses leading system messages into one stable prefix for cache hits', async () => {
+    const ResponseSchema = z.object({ ok: z.boolean() });
+    const { client, calls } = makeFakeClient(() => fakeCompletion());
+    const provider = createXaiProvider({ client, model: 'grok-4' });
+
+    await provider.complete({
+      schema: ResponseSchema,
+      messages: [
+        { role: 'system', content: 'Alpha' },
+        { role: 'system', content: 'Beta' },
+        USER_MESSAGE,
+      ],
+      taskKind: 'analysis',
+    });
+
+    expect(calls[0]?.request.messages).toEqual([
+      { role: 'system', content: 'Alpha\n\nBeta' },
+      { role: 'user', content: USER_MESSAGE.content },
+    ]);
   });
 
   it('forwards maxOutputTokens as max_completion_tokens', async () => {
@@ -293,37 +321,160 @@ describe('createXaiProvider', () => {
     });
   });
 
-  it('passes an AbortSignal and aborts when timeoutMs elapses', async () => {
-    jest.useFakeTimers();
+  it('emits telemetry with cache and cost accounting on success', async () => {
     const ResponseSchema = z.object({ ok: z.boolean() });
-    let capturedSignal: AbortSignal | undefined;
-    const client: XaiClient = {
-      chat: {
-        completions: {
-          create: (_request, options) => {
-            capturedSignal = options?.signal;
-            return new Promise<XaiChatCompletion>((_resolve, reject) => {
-              capturedSignal?.addEventListener('abort', () => {
-                reject(new Error('aborted'));
-              });
-            });
+    const events: unknown[] = [];
+    const { client } = makeFakeClient(() => fakeCompletion());
+    const provider = createXaiProvider({
+      client,
+      model: 'grok-4',
+      telemetry: {
+        clock: () => new Date('2026-04-18T12:00:00Z'),
+        sink: {
+          append: (event) => {
+            events.push(event);
           },
         },
       },
-    };
-    const provider = createXaiProvider({ client, model: 'grok-4' });
+    });
 
-    const pending = provider.complete({
+    await provider.complete({
       schema: ResponseSchema,
       messages: [USER_MESSAGE],
       taskKind: 'analysis',
-      timeoutMs: 50,
+      requestId: 'req_xai_telemetry',
     });
-    const assertion = expect(pending).rejects.toThrow(/aborted/);
-    jest.advanceTimersByTime(60);
-    await assertion;
-    expect(capturedSignal?.aborted).toBe(true);
-    jest.useRealTimers();
+
+    expect(events).toEqual([
+      expect.objectContaining({
+        occurredAt: '2026-04-18T12:00:00.000Z',
+        monthKey: '2026-04',
+        provider: 'xai',
+        model: 'grok-4',
+        taskKind: 'analysis',
+        requestId: 'req_xai_telemetry',
+        outcome: 'success',
+        rawFinishReason: 'stop',
+        cacheHitRatio: 11 / 17,
+        usage: {
+          inputTokens: 17,
+          outputTokens: 9,
+          totalTokens: 26,
+          cachedInputTokens: 11,
+          costInUsdTicks: 12345,
+        },
+      }),
+    ]);
+  });
+
+  it('blocks calls once the recorded monthly budget is exhausted', async () => {
+    const ResponseSchema = z.object({ ok: z.boolean() });
+    const { client } = makeFakeClient(() => fakeCompletion());
+    const provider = createXaiProvider({
+      client,
+      model: 'grok-4',
+      telemetry: {
+        clock: () => new Date('2026-04-18T12:00:00Z'),
+        budget: {
+          monthlyCapUsdTicks: 1000,
+          softLimitThresholdPct: 80,
+          meter: {
+            getMonthToDateCostUsdTicks: () => 1000,
+          },
+        },
+      },
+    });
+
+    await expect(
+      provider.complete({
+        schema: ResponseSchema,
+        messages: [USER_MESSAGE],
+        taskKind: 'analysis',
+      }),
+    ).rejects.toThrow(XaiBudgetExceededError);
+  });
+
+  it('notifies when a successful call crosses the soft budget threshold', async () => {
+    const ResponseSchema = z.object({ ok: z.boolean() });
+    const alerts: unknown[] = [];
+    const { client } = makeFakeClient(() => fakeCompletion());
+    const provider = createXaiProvider({
+      client,
+      model: 'grok-4',
+      telemetry: {
+        clock: () => new Date('2026-04-18T12:00:00Z'),
+        budget: {
+          monthlyCapUsdTicks: 20000,
+          softLimitThresholdPct: 80,
+          meter: {
+            getMonthToDateCostUsdTicks: () => 10000,
+          },
+          softLimitSink: {
+            notify: (alert) => {
+              alerts.push(alert);
+            },
+          },
+        },
+      },
+    });
+
+    await provider.complete({
+      schema: ResponseSchema,
+      messages: [USER_MESSAGE],
+      taskKind: 'analysis',
+      requestId: 'req_soft_limit',
+    });
+
+    expect(alerts).toEqual([
+      {
+        occurredAt: '2026-04-18T12:00:00.000Z',
+        monthKey: '2026-04',
+        provider: 'xai',
+        model: 'grok-4',
+        taskKind: 'analysis',
+        requestId: 'req_soft_limit',
+        monthToDateCostUsdTicks: 10000,
+        projectedMonthCostUsdTicks: 22345,
+        budgetCapUsdTicks: 20000,
+        softLimitThresholdPct: 80,
+      },
+    ]);
+  });
+
+  it('passes an AbortSignal and aborts when timeoutMs elapses', async () => {
+    jest.useFakeTimers();
+    try {
+      const ResponseSchema = z.object({ ok: z.boolean() });
+      let capturedSignal: AbortSignal | undefined;
+      const client: XaiClient = {
+        chat: {
+          completions: {
+            create: (_request, options) => {
+              capturedSignal = options?.signal;
+              return new Promise<XaiChatCompletion>((_resolve, reject) => {
+                capturedSignal?.addEventListener('abort', () => {
+                  reject(new Error('aborted'));
+                });
+              });
+            },
+          },
+        },
+      };
+      const provider = createXaiProvider({ client, model: 'grok-4' });
+
+      const pending = provider.complete({
+        schema: ResponseSchema,
+        messages: [USER_MESSAGE],
+        taskKind: 'analysis',
+        timeoutMs: 50,
+      });
+      const assertion = expect(pending).rejects.toThrow(/aborted/);
+      await jest.advanceTimersByTimeAsync(60);
+      await assertion;
+      expect(capturedSignal?.aborted).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('does not arm a timer when timeoutMs is absent', async () => {

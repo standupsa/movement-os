@@ -16,6 +16,8 @@ export const TokenUsageSchema = z
     inputTokens: z.number().int().nonnegative(),
     outputTokens: z.number().int().nonnegative(),
     totalTokens: z.number().int().nonnegative(),
+    cachedInputTokens: z.number().int().nonnegative().optional(),
+    costInUsdTicks: z.number().int().nonnegative().optional(),
   })
   .strict();
 export type TokenUsage = z.infer<typeof TokenUsageSchema>;

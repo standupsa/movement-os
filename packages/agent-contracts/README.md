@@ -17,7 +17,9 @@ satisfy, plus the Zod schemas that keep requests and responses honest.
 - `AgentMessageSchema` — narrow conversation message (role + content).
 - `ToolSpec` + `defineTool` — provider-agnostic tool definition backed
   by a Zod schema.
-- `TokenUsageSchema` — input/output/total token counts.
+- `TokenUsageSchema` — input/output/total token counts, with optional
+  cache-hit and provider-cost fields (`cachedInputTokens`,
+  `costInUsdTicks`) when the adapter can report them honestly.
 - `createFakeProvider` — in-memory fake for deterministic tests.
 
 ## What it deliberately omits

@@ -132,6 +132,25 @@ not hard-coded. The deployment's routing choice is logged as an
 - Public-facing thread and dossier drafts (always human-gated before
   publication).
 
+### Runtime controls for xAI
+
+Every production xAI call must be measurable before it is promoted from
+credential-only readiness into a live runtime path. PR-11 adds the
+required provider-layer controls in `@wsa/agent-xai`:
+
+- append-only telemetry hooks for `model`, `taskKind`, `requestId`,
+  token usage, cached prompt tokens, and `costInUsdTicks`
+- a hard preflight budget gate that blocks new calls once the recorded
+  month-to-date spend reaches the configured cap
+- a soft-threshold alert when a successful call pushes projected spend
+  across the configured warning percentage
+- cache-aware request shaping by collapsing leading system prompts into
+  one stable prefix so xAI's prompt caching can actually work
+
+These controls are deliberately provider-layer primitives, not
+front-page branding. Public Grok/xAI attribution remains false until a
+real production runtime path consumes these controls.
+
 ### What xAI **does not do alone** on this platform
 
 - Make final guilt findings.

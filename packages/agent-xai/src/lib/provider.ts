@@ -45,6 +45,15 @@ import type {
 import type { z } from 'zod';
 import { mapXaiFinishReason } from './finish-reason.js';
 import { zodToXaiJsonSchema } from './json-schema.js';
+import {
+  appendTelemetryEvent,
+  assertBudgetAvailable,
+  cacheHitRatioForUsage,
+  collapseLeadingSystemMessagesForCache,
+  getBudgetState,
+  notifySoftLimit,
+  type XaiTelemetryOptions,
+} from './telemetry.js';
 import type {
   XaiChatCompletion,
   XaiChatCompletionChoice,
@@ -63,6 +72,12 @@ export interface XaiProviderConfig {
    * `'output'`.
    */
   readonly responseSchemaName?: string;
+  /**
+   * Optional telemetry / budget controls. When configured, xAI calls are
+   * budget-gated against recorded month-to-date spend and every call emits
+   * a structured telemetry event for append-only logging.
+   */
+  readonly telemetry?: XaiTelemetryOptions;
 }
 
 const ZERO_USAGE: TokenUsage = Object.freeze({
@@ -74,6 +89,7 @@ const ZERO_USAGE: TokenUsage = Object.freeze({
 export function createXaiProvider(config: XaiProviderConfig): ModelProvider {
   const { client, model } = config;
   const responseSchemaName = config.responseSchemaName ?? 'output';
+  const clock = config.telemetry?.clock ?? (() => new Date());
 
   return {
     id: 'xai',
@@ -81,6 +97,11 @@ export function createXaiProvider(config: XaiProviderConfig): ModelProvider {
       args: CompleteArgs<TSchema>,
     ): Promise<ModelResponse<z.infer<TSchema>>> => {
       const request = buildRequest(args, model, responseSchemaName);
+      const startedAt = clock();
+      const budgetState = await getBudgetState(
+        config.telemetry?.budget,
+        startedAt,
+      );
       const controller = new AbortController();
       const timeoutHandle =
         args.timeoutMs !== undefined
@@ -89,42 +110,134 @@ export function createXaiProvider(config: XaiProviderConfig): ModelProvider {
             }, args.timeoutMs)
           : undefined;
 
-      let completion: XaiChatCompletion;
+      let completion: XaiChatCompletion | undefined;
       try {
+        assertBudgetAvailable(budgetState);
         completion = await client.chat.completions.create(request, {
           signal: controller.signal,
         });
+        const choice = completion.choices[0];
+        if (choice === undefined) {
+          throw new Error('xai adapter: provider returned no choices');
+        }
+
+        const content = choice.message.content;
+        if (content === null) {
+          throw new Error(
+            `xai adapter: assistant message had null content (finish_reason=${choice.finish_reason}); v1 does not support tool-call-only responses`,
+          );
+        }
+
+        const parsedValue = parseAndValidate(args.schema, content, choice);
+        const usage: TokenUsage = normaliseUsage(completion);
+        const status = mapXaiFinishReason(choice.finish_reason);
+        const projectedMonthCostUsdTicks =
+          budgetState?.monthToDateCostUsdTicks !== undefined &&
+          usage.costInUsdTicks !== undefined
+            ? budgetState.monthToDateCostUsdTicks + usage.costInUsdTicks
+            : undefined;
+
+        const result: ModelResponse<z.infer<TSchema>> = {
+          value: parsedValue,
+          usage,
+          provider: 'xai',
+          model: completion.model,
+          responseId: completion.id,
+          rawFinishReason: choice.finish_reason,
+          status,
+        };
+
+        const event = {
+          occurredAt: startedAt.toISOString(),
+          monthKey:
+            budgetState?.monthKey ?? startedAt.toISOString().slice(0, 7),
+          provider: 'xai' as const,
+          model: completion.model,
+          taskKind: args.taskKind,
+          outcome: 'success' as const,
+          status,
+          rawFinishReason: choice.finish_reason,
+          usage,
+          cacheHitRatio: cacheHitRatioForUsage(usage),
+          ...(args.requestId !== undefined
+            ? { requestId: args.requestId }
+            : {}),
+          responseId: completion.id,
+          ...(budgetState?.monthToDateCostUsdTicks !== undefined
+            ? { monthToDateCostUsdTicks: budgetState.monthToDateCostUsdTicks }
+            : {}),
+          ...(projectedMonthCostUsdTicks !== undefined
+            ? { projectedMonthCostUsdTicks }
+            : {}),
+          ...(budgetState?.monthlyCapUsdTicks !== undefined
+            ? { budgetCapUsdTicks: budgetState.monthlyCapUsdTicks }
+            : {}),
+          ...(budgetState?.softLimitThresholdPct !== undefined
+            ? { softLimitThresholdPct: budgetState.softLimitThresholdPct }
+            : {}),
+        };
+        await appendTelemetryEvent(config.telemetry?.sink, event);
+        await notifySoftLimit(config.telemetry?.budget, budgetState, event);
+        return result;
+      } catch (cause) {
+        const usage =
+          completion === undefined ? ZERO_USAGE : normaliseUsage(completion);
+        const rawFinishReason =
+          completion?.choices[0]?.finish_reason ??
+          (cause instanceof Error && cause.name === 'XaiBudgetExceededError'
+            ? 'budget_cap_reached'
+            : 'error');
+        const status =
+          completion?.choices[0] === undefined
+            ? undefined
+            : mapXaiFinishReason(completion.choices[0].finish_reason);
+        const projectedMonthCostUsdTicks =
+          budgetState?.monthToDateCostUsdTicks !== undefined &&
+          usage.costInUsdTicks !== undefined
+            ? budgetState.monthToDateCostUsdTicks + usage.costInUsdTicks
+            : undefined;
+
+        await appendTelemetryEvent(config.telemetry?.sink, {
+          occurredAt: startedAt.toISOString(),
+          monthKey:
+            budgetState?.monthKey ?? startedAt.toISOString().slice(0, 7),
+          provider: 'xai',
+          model: completion?.model ?? model,
+          taskKind: args.taskKind,
+          outcome:
+            cause instanceof Error && cause.name === 'XaiBudgetExceededError'
+              ? 'budget-blocked'
+              : 'error',
+          usage,
+          cacheHitRatio: cacheHitRatioForUsage(usage),
+          ...(args.requestId !== undefined
+            ? { requestId: args.requestId }
+            : {}),
+          ...(completion?.id !== undefined
+            ? { responseId: completion.id }
+            : {}),
+          ...(status !== undefined ? { status } : {}),
+          rawFinishReason,
+          ...(budgetState?.monthToDateCostUsdTicks !== undefined
+            ? { monthToDateCostUsdTicks: budgetState.monthToDateCostUsdTicks }
+            : {}),
+          ...(projectedMonthCostUsdTicks !== undefined
+            ? { projectedMonthCostUsdTicks }
+            : {}),
+          ...(budgetState?.monthlyCapUsdTicks !== undefined
+            ? { budgetCapUsdTicks: budgetState.monthlyCapUsdTicks }
+            : {}),
+          ...(budgetState?.softLimitThresholdPct !== undefined
+            ? { softLimitThresholdPct: budgetState.softLimitThresholdPct }
+            : {}),
+          errorMessage: cause instanceof Error ? cause.message : String(cause),
+        });
+        throw cause;
       } finally {
         if (timeoutHandle !== undefined) {
           clearTimeout(timeoutHandle);
         }
       }
-
-      const choice = completion.choices[0];
-      if (choice === undefined) {
-        throw new Error('xai adapter: provider returned no choices');
-      }
-
-      const content = choice.message.content;
-      if (content === null) {
-        throw new Error(
-          `xai adapter: assistant message had null content (finish_reason=${choice.finish_reason}); v1 does not support tool-call-only responses`,
-        );
-      }
-
-      const parsedValue = parseAndValidate(args.schema, content, choice);
-      const usage: TokenUsage = normaliseUsage(completion);
-      const status = mapXaiFinishReason(choice.finish_reason);
-
-      return {
-        value: parsedValue,
-        usage,
-        provider: 'xai',
-        model: completion.model,
-        responseId: completion.id,
-        rawFinishReason: choice.finish_reason,
-        status,
-      };
     },
   };
 }
@@ -134,9 +247,10 @@ function buildRequest<TSchema extends z.ZodType>(
   model: string,
   responseSchemaName: string,
 ): XaiChatCompletionRequest {
-  const messages: ReadonlyArray<XaiChatMessage> = args.messages.map(
-    (m): XaiChatMessage => ({ role: m.role, content: m.content }),
-  );
+  const messages: ReadonlyArray<XaiChatMessage> =
+    collapseLeadingSystemMessagesForCache(args.messages).map(
+      (m): XaiChatMessage => ({ role: m.role, content: m.content }),
+    );
 
   const responseSchema = zodToXaiJsonSchema(args.schema);
 
@@ -213,5 +327,11 @@ function normaliseUsage(completion: XaiChatCompletion): TokenUsage {
     inputTokens: usage.prompt_tokens,
     outputTokens: usage.completion_tokens,
     totalTokens: usage.total_tokens,
+    ...(usage.prompt_tokens_details?.cached_tokens !== undefined
+      ? { cachedInputTokens: usage.prompt_tokens_details.cached_tokens }
+      : {}),
+    ...(usage.cost_in_usd_ticks !== undefined
+      ? { costInUsdTicks: usage.cost_in_usd_ticks }
+      : {}),
   };
 }

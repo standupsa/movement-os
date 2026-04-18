@@ -65,6 +65,10 @@ export interface XaiChatCompletionUsage {
   readonly prompt_tokens: number;
   readonly completion_tokens: number;
   readonly total_tokens: number;
+  readonly prompt_tokens_details?: {
+    readonly cached_tokens?: number;
+  };
+  readonly cost_in_usd_ticks?: number;
 }
 
 export interface XaiChatCompletion {

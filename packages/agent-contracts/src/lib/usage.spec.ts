@@ -7,6 +7,8 @@ describe('TokenUsageSchema', () => {
         inputTokens: 100,
         outputTokens: 25,
         totalTokens: 125,
+        cachedInputTokens: 80,
+        costInUsdTicks: 107500,
       }).success,
     ).toBe(true);
   });
