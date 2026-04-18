@@ -8,13 +8,16 @@ Worker that preserves inbound mail in R2.
 Live today:
 
 - Cloudflare Email Routing is enabled
-- `hello@`, `support@`, and `legal@` forward to a human inbox
+- `hello@`, `support@`, and `legal@` route to the Cloudflare Email Worker
+- the Worker stores raw MIME in `wsa-inbox`
+- each `.eml` object carries deterministic auth/triage metadata
 
 Target state:
 
-- the aliases route to a Cloudflare Email Worker
-- the Worker stores raw mail in R2
-- human access becomes a downstream retrieval concern
+- downstream consumers rely on object metadata (`spamVerdict`, `authVerdict`,
+  `spfVerdict`, `dkimVerdict`, `dmarcVerdict`, `headerAnomalies`) before any
+  xAI-backed processing
+- human access remains a downstream retrieval concern, not the primary ingress
 
 See [ADR-0006](../architecture/0006-email-worker-ingress.md) for the design
 decision.
@@ -56,7 +59,7 @@ The Email Worker ingress lane is complete only when all of these are true:
 
 1. a test email to each alias is accepted
 2. each test email produces one `.eml` object in `wsa-inbox`
-3. each test email produces one `.json` metadata sidecar
+3. each `.eml` object includes custom metadata with auth and spam verdicts
 4. the human bootstrap inbox no longer receives the primary copy
 5. a forced storage failure produces a temporary SMTP rejection instead of a
    silent drop
@@ -67,5 +70,6 @@ The Email Worker ingress lane is complete only when all of these are true:
   end-to-end.
 - Do not claim the human inbox is retired until test mail proves R2 capture for
   all three aliases.
-- Do not parse mail inline in the Worker until raw preservation is already
-  stable.
+- Keep the spam/triage stage deterministic and auditable. Do not spend xAI
+  tokens on inbound mail until a later lane explicitly wires a downstream
+  consumer to `spamVerdict=clean`.

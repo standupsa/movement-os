@@ -1,4 +1,5 @@
 import { generateKey } from './key.js';
+import { triageMessage } from './triage.js';
 
 /**
  * Minimal shape the ingest function needs from the R2 binding.
@@ -44,6 +45,7 @@ export async function ingest(
 ): Promise<string> {
   const key = generateKey(now, message.to);
   const body = await new Response(message.raw).arrayBuffer();
+  const triage = triageMessage(message.headers, body.byteLength);
   await inbox.put(key, body, {
     customMetadata: {
       from: message.from,
@@ -51,6 +53,16 @@ export async function ingest(
       messageId: message.headers.get('message-id') ?? '',
       subject: message.headers.get('subject') ?? '',
       received: now.toISOString(),
+      spamVerdict: triage.spamVerdict,
+      authVerdict: triage.authVerdict,
+      spfVerdict: triage.spfVerdict,
+      dkimVerdict: triage.dkimVerdict,
+      dmarcVerdict: triage.dmarcVerdict,
+      messageSizeBytes: String(triage.messageSizeBytes),
+      headerAnomalies:
+        triage.headerAnomalies.length > 0
+          ? triage.headerAnomalies.join(',')
+          : 'none',
     },
     httpMetadata: {
       contentType: 'message/rfc822',

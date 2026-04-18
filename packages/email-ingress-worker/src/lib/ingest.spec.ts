@@ -62,7 +62,10 @@ describe('ingest', () => {
       from: 'alice@example.org',
       to: 'support@witnesssouthafrica.org',
       headers: new Headers({
+        'authentication-results':
+          'mx.cloudflare.net; spf=pass smtp.mailfrom=example.org; dkim=pass header.d=example.org; dmarc=pass header.from=example.org',
         'message-id': '<m1@x>',
+        date: 'Sat, 18 Apr 2026 12:34:56 +0000',
         subject: 'help',
       }),
       raw: streamFromString('body'),
@@ -76,6 +79,13 @@ describe('ingest', () => {
       messageId: '<m1@x>',
       subject: 'help',
       received: '2026-04-18T12:34:56.000Z',
+      spamVerdict: 'clean',
+      authVerdict: 'pass',
+      spfVerdict: 'pass',
+      dkimVerdict: 'pass',
+      dmarcVerdict: 'pass',
+      messageSizeBytes: '4',
+      headerAnomalies: 'none',
     });
   });
 
@@ -92,6 +102,10 @@ describe('ingest', () => {
 
     expect(puts[0]?.options?.customMetadata?.messageId).toBe('');
     expect(puts[0]?.options?.customMetadata?.subject).toBe('');
+    expect(puts[0]?.options?.customMetadata?.spamVerdict).toBe('suspect');
+    expect(puts[0]?.options?.customMetadata?.headerAnomalies).toBe(
+      'missing-authentication-results,missing-message-id,missing-date',
+    );
   });
 
   it('sets the content type to message/rfc822 (raw MIME)', async () => {
