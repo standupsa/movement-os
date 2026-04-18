@@ -1,11 +1,11 @@
-# DNS Runbook — `standupsa.org`
+# DNS Runbook — `witnesssouthafrica.org`
 
-Repo-side runbook for the Stand Up South Africa public domain.
+Repo-side runbook for the Witness South Africa public domain.
 
 ## Decisions
 
-- Canonical site: `https://standupsa.org`
-- Redirect variant: `https://www.standupsa.org` -> `https://standupsa.org`
+- Canonical site: `https://witnesssouthafrica.org`
+- Redirect variant: `https://www.witnesssouthafrica.org` -> `https://witnesssouthafrica.org`
 - Registrar: Cloudflare Registrar
 - Authoritative DNS: Cloudflare DNS
 - Inbound mail: Cloudflare Email Routing
@@ -14,7 +14,7 @@ Repo-side runbook for the Stand Up South Africa public domain.
 
 ## Preconditions
 
-- `standupsa.org` is registered in the existing hardware-key-protected
+- `witnesssouthafrica.org` is registered in the existing hardware-key-protected
   Cloudflare account.
 - Cloudflare is the authoritative nameserver for the domain.
 - A hardened existing inbox is available as the Cloudflare Email Routing
@@ -48,7 +48,7 @@ GitHub Pages documents these IPs for apex domains:
 | `CNAME` | `www` | `standupsa.github.io` |
 
 After Pages is working, configure the GitHub Pages custom domain as
-`standupsa.org` and enforce the redirect from `www` to apex in the Pages
+`witnesssouthafrica.org` and enforce the redirect from `www` to apex in the Pages
 settings.
 
 ## 2. GitHub domain verification
@@ -57,9 +57,9 @@ Verify the domain at the GitHub organization level before treating it as
 live:
 
 1. GitHub -> `standupsa` organization settings -> `Pages` -> `Add a domain`
-2. Enter `standupsa.org`
+2. Enter `witnesssouthafrica.org`
 3. GitHub will show a TXT record under
-   `_github-pages-challenge-standupsa.standupsa.org`
+   `_github-pages-challenge-standupsa.witnesssouthafrica.org`
 4. Add that TXT record in Cloudflare
 5. Wait for DNS to propagate, then complete verification in GitHub
 
@@ -71,9 +71,9 @@ Enable Email Routing only after Cloudflare is authoritative for DNS.
 
 Create these aliases:
 
-- `hello@standupsa.org`
-- `support@standupsa.org`
-- `legal@standupsa.org`
+- `hello@witnesssouthafrica.org`
+- `support@witnesssouthafrica.org`
+- `legal@witnesssouthafrica.org`
 
 Route all three to the same hardened destination inbox for v1.
 
@@ -102,7 +102,7 @@ Mail-policy scaffolding for an inbound-only phase:
 | Type | Name | Value |
 | --- | --- | --- |
 | `TXT` | `@` | `v=spf1 -all` |
-| `TXT` | `_dmarc` | `v=DMARC1; p=reject; adkim=s; aspf=s; rua=mailto:legal@standupsa.org` |
+| `TXT` | `_dmarc` | `v=DMARC1; p=reject; adkim=s; aspf=s; rua=mailto:legal@witnesssouthafrica.org` |
 
 Revisit SPF/DKIM/DMARC when outbound branded mail is introduced.
 
@@ -111,12 +111,12 @@ Revisit SPF/DKIM/DMARC when outbound branded mail is introduced.
 Use these checks from a terminal after DNS changes propagate:
 
 ```sh
-dig standupsa.org +noall +answer -t A
-dig standupsa.org +noall +answer -t AAAA
-dig www.standupsa.org +noall +answer -t CNAME
-dig _github-pages-challenge-standupsa.standupsa.org +noall +answer -t TXT
-dig standupsa.org +noall +answer -t CAA
-dig _dmarc.standupsa.org +noall +answer -t TXT
+dig witnesssouthafrica.org +noall +answer -t A
+dig witnesssouthafrica.org +noall +answer -t AAAA
+dig www.witnesssouthafrica.org +noall +answer -t CNAME
+dig _github-pages-challenge-standupsa.witnesssouthafrica.org +noall +answer -t TXT
+dig witnesssouthafrica.org +noall +answer -t CAA
+dig _dmarc.witnesssouthafrica.org +noall +answer -t TXT
 ```
 
 Expected outcomes:
@@ -133,6 +133,9 @@ Expected outcomes:
   increase takeover risk.
 - Keep `CNAME` in the publishing source so the intended canonical domain stays
   in-repo.
+- Until the GitHub organization is renamed, the `www` CNAME and the
+  `_github-pages-challenge-standupsa` label will still reference
+  `standupsa`. Update both after the org rename lands.
 - If the Pages custom-domain or HTTPS state sticks after DNS changes, remove
   and re-add the custom domain in GitHub Pages to force a fresh certificate
   issuance attempt.

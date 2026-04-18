@@ -124,7 +124,7 @@ the same licence; see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 - [`POPIA.md`](./POPIA.md) — our commitments around personal information
   under the South African Protection of Personal Information Act.
 - [`docs/ops/dns-runbook.md`](./docs/ops/dns-runbook.md) — canonical DNS,
-  GitHub Pages, and email-routing setup for `standupsa.org`.
+  GitHub Pages, and email-routing setup for `witnesssouthafrica.org`.
 
 ## Getting help and getting involved
 
