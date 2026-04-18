@@ -64,37 +64,21 @@ describe('pollForMatch', () => {
       () => ({
         kind: 'json',
         body: {
-          result: {
-            objects: [
-              { key: '2026-04-18/120000-aaa-hello.eml', size: 400 },
-              { key: '2026-04-18/120100-bbb-hello.eml', size: 600 },
-            ],
-          },
-        },
-      }),
-      // HEAD first candidate — no match
-      () => ({
-        kind: 'json',
-        body: {
-          result: {
-            customMetadata: { subject: 'hello world' },
-            size: 400,
-            uploaded: '2026-04-18T12:00:00Z',
-          },
-        },
-      }),
-      // HEAD second candidate — match
-      () => ({
-        kind: 'json',
-        body: {
-          result: {
-            customMetadata: {
-              subject: 'wsa-probe-20260418-abc123',
-              spamVerdict: 'clean',
+          result: [
+            {
+              key: '2026-04-18/120000-aaa-hello.eml',
+              size: 400,
+              custom_metadata: { subject: 'hello world' },
             },
-            size: 600,
-            uploaded: '2026-04-18T12:01:00Z',
-          },
+            {
+              key: '2026-04-18/120100-bbb-hello.eml',
+              size: 600,
+              custom_metadata: {
+                subject: 'wsa-probe-20260418-abc123',
+                spamVerdict: 'clean',
+              },
+            },
+          ],
         },
       }),
     ]);
@@ -121,9 +105,50 @@ describe('pollForMatch', () => {
     expect(result.customMetadata.spamVerdict).toBe('clean');
   });
 
+  it('falls back to HEAD when list objects omit custom metadata', async () => {
+    const { fetchImpl } = createScriptedFetch([
+      () => ({
+        kind: 'json',
+        body: {
+          result: [{ key: '2026-04-18/120100-bbb-hello.eml', size: 600 }],
+        },
+      }),
+      () => ({
+        kind: 'json',
+        body: {
+          result: {
+            customMetadata: {
+              subject: 'wsa-probe-20260418-head123',
+              spamVerdict: 'clean',
+            },
+            size: 600,
+            uploaded: '2026-04-18T12:01:00Z',
+          },
+        },
+      }),
+    ]);
+
+    const result = await pollForMatch({
+      apiToken: 't',
+      accountId: 'a',
+      bucket: 'wsa-inbox',
+      runId: 'wsa-probe-20260418-head123',
+      datePrefix: '2026-04-18',
+      timeoutMs: 10_000,
+      intervalMs: 1,
+      fetch: fetchImpl,
+      now: mockClock(),
+    });
+
+    if (!('key' in result)) {
+      throw new Error(`expected match, got timeout: ${JSON.stringify(result)}`);
+    }
+    expect(result.customMetadata.spamVerdict).toBe('clean');
+  });
+
   it('returns timeout when no object has the matching subject within the window', async () => {
     const { fetchImpl } = createScriptedFetch([
-      () => ({ kind: 'json', body: { result: { objects: [] } } }),
+      () => ({ kind: 'json', body: { result: [] } }),
     ]);
 
     const clock = mockClock([0, 5_000, 10_000]);
@@ -152,7 +177,7 @@ describe('pollForMatch', () => {
       () => ({
         kind: 'json',
         body: {
-          result: { objects: [{ key: '2026-04-18/000000-xxx-hello.eml' }] },
+          result: [{ key: '2026-04-18/000000-xxx-hello.eml' }],
         },
       }),
       // HEAD: no match
@@ -166,7 +191,7 @@ describe('pollForMatch', () => {
       () => ({
         kind: 'json',
         body: {
-          result: { objects: [{ key: '2026-04-18/000000-xxx-hello.eml' }] },
+          result: [{ key: '2026-04-18/000000-xxx-hello.eml' }],
         },
       }),
     ]);
@@ -186,5 +211,48 @@ describe('pollForMatch', () => {
 
     expect('reason' in result ? result.reason : 'match').toBe('timeout');
     expect(callCount()).toBe(3);
+  });
+
+  it('accepts the nested result.objects shape for compatibility', async () => {
+    const { fetchImpl } = createScriptedFetch([
+      () => ({
+        kind: 'json',
+        body: {
+          result: {
+            objects: [{ key: '2026-04-18/120100-bbb-hello.eml', size: 600 }],
+          },
+        },
+      }),
+      () => ({
+        kind: 'json',
+        body: {
+          result: {
+            customMetadata: {
+              subject: 'wsa-probe-20260418-compat123',
+              spamVerdict: 'clean',
+            },
+            size: 600,
+            uploaded: '2026-04-18T12:01:00Z',
+          },
+        },
+      }),
+    ]);
+
+    const result = await pollForMatch({
+      apiToken: 't',
+      accountId: 'a',
+      bucket: 'wsa-inbox',
+      runId: 'wsa-probe-20260418-compat123',
+      datePrefix: '2026-04-18',
+      timeoutMs: 10_000,
+      intervalMs: 1,
+      fetch: fetchImpl,
+      now: mockClock(),
+    });
+
+    if (!('key' in result)) {
+      throw new Error(`expected match, got timeout: ${JSON.stringify(result)}`);
+    }
+    expect(result.key).toBe('2026-04-18/120100-bbb-hello.eml');
   });
 });
