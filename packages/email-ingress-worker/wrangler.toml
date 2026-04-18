@@ -1,0 +1,14 @@
+name = "wsa-email-ingress"
+main = "src/index.ts"
+compatibility_date = "2026-04-18"
+compatibility_flags = ["nodejs_compat"]
+
+# R2 binding: env.INBOX provides access to the wsa-inbox bucket.
+[[r2_buckets]]
+binding = "INBOX"
+bucket_name = "wsa-inbox"
+
+# Observability: capture logs for every invocation. Required for audit
+# trail per ADR-0006 (append-only evidence platform).
+[observability]
+enabled = true
