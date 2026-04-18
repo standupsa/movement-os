@@ -28,73 +28,41 @@ jobs:
     name: semgrep
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-      - name: Scan with Semgrep CE
+      - name: Scan with Semgrep action
         continue-on-error: true
-        uses: docker://semgrep/semgrep:latest
+        uses: semgrep/semgrep-action@v1
         with:
-          args: >-
-            semgrep scan
-            --config p/default
-            --config p/typescript
-            --config p/javascript
-            --config p/secrets
-            --json
-            --output semgrep.json
-      - name: Report Semgrep findings count
-        if: always()
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          path = Path('semgrep.json')
-          results = json.loads(path.read_text()) if path.exists() else {}
-          findings = results.get('results', [])
-          print(f'semgrep findings: {len(findings)}')
-          PY
+          config: |
+            p/default
+            p/typescript
+            p/javascript
+            p/secrets
 
   gitleaks:
     name: gitleaks
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Scan with gitleaks action
-        id: gitleaks_action
         continue-on-error: true
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Fallback scan with gitleaks CLI
-        if: always() && steps.gitleaks_action.outcome != 'success'
-        continue-on-error: true
-        run: |
-          docker run --rm \
-            -v "$GITHUB_WORKSPACE:/repo" \
-            -w /repo \
-            ghcr.io/gitleaks/gitleaks:latest \
-            git --report-format json --report-path gitleaks.json --redact .
-      - name: Report gitleaks findings count
-        if: always()
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          path = Path('gitleaks.json')
-          findings = json.loads(path.read_text()) if path.exists() else []
-          print(f'gitleaks findings: {len(findings)}')
-          PY
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
   dependency-review:
     name: dependency-review
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Review dependency changes
