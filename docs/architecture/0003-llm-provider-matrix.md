@@ -8,9 +8,9 @@
 ## Context
 
 ADR-0001 chose the OpenAI Agents SDK as the **default** agent framework,
-explicitly wrapped behind an internal `@sasa/agent-contracts` interface
+explicitly wrapped behind an internal `@wsa/agent-contracts` interface
 so the platform is never captured by a single vendor. That ADR did not
-pick concrete *model providers*. This one does.
+pick concrete _model providers_. This one does.
 
 Three things force the decision:
 
@@ -73,11 +73,11 @@ multi-model agreement and a human `Approval` record.
 
 ### The `ModelProvider` interface
 
-Shipped in `@sasa/agent-contracts` (follow-up implementation PR).
+Shipped in `@wsa/agent-contracts` (follow-up implementation PR).
 Sketch of the contract:
 
 ```ts
-// @sasa/agent-contracts
+// @wsa/agent-contracts
 export type LlmProviderId = 'openai' | 'xai' | 'anthropic' | 'local';
 
 export interface ModelProvider {
@@ -89,9 +89,9 @@ export interface ModelProvider {
   complete<TSchema>(args: {
     task: AgentTaskKind;
     messages: AgentMessage[];
-    schema?: TSchema;          // Zod schema for structured output
+    schema?: TSchema; // Zod schema for structured output
     tools?: ToolSpec[];
-    traceId: string;           // threaded into the audit log
+    traceId: string; // threaded into the audit log
   }): Promise<ModelResponse<TSchema>>;
 }
 
@@ -109,12 +109,12 @@ export type AgentTaskKind =
 ```ts
 // config shipped as a default; operators may override per deployment
 export const defaultRouting: Record<AgentTaskKind, LlmProviderId> = {
-  intakeRedaction:       'openai',   // or 'local' when local adapter ships
-  claimExtraction:       'xai',
-  contradictionReview:   'openai',   // deliberate cross-check vs extraction
-  dossierDrafting:       'xai',
-  publicationDrafting:   'xai',
-  challenge:             'anthropic' // third opinion before promotion
+  intakeRedaction: 'openai', // or 'local' when local adapter ships
+  claimExtraction: 'xai',
+  contradictionReview: 'openai', // deliberate cross-check vs extraction
+  dossierDrafting: 'xai',
+  publicationDrafting: 'xai',
+  challenge: 'anthropic', // third opinion before promotion
 };
 ```
 
@@ -139,8 +139,8 @@ not hard-coded. The deployment's routing choice is logged as an
 - Publish unreviewed allegations.
 - Hold the only copy of any sensitive artefact.
 
-These constraints are enforced by the `@sasa/guardrails` rules and by
-the `Approval` gate in `@sasa/schemas`. The guardrails will reject any
+These constraints are enforced by the `@wsa/guardrails` rules and by
+the `Approval` gate in `@wsa/schemas`. The guardrails will reject any
 task whose output would be published without a matching `Approval` and
 whose provenance records only one provider.
 
@@ -176,16 +176,16 @@ responsibility. See [`POPIA.md`](../../POPIA.md).
 
 Implementation-only, in a follow-up PR, split into small commits:
 
-1. `@sasa/agent-contracts` — `ModelProvider` interface, `AgentTaskKind`,
+1. `@wsa/agent-contracts` — `ModelProvider` interface, `AgentTaskKind`,
    `ModelResponse<T>`.
-2. `@sasa/agent-openai` — OpenAI adapter (reference).
-3. `@sasa/agent-xai` — xAI adapter (thin wrapper, `baseURL
-   https://api.x.ai/v1`).
-4. `@sasa/agent-anthropic` — Claude adapter (parity).
+2. `@wsa/agent-openai` — OpenAI adapter (reference).
+3. `@wsa/agent-xai` — xAI adapter (thin wrapper, `baseURL
+https://api.x.ai/v1`).
+4. `@wsa/agent-anthropic` — Claude adapter (parity).
 5. Routing config loader + audit-log integration.
 6. Guardrails rule: promotion to `conclusive` / `high-confidence`
    requires provenance from two distinct providers. Landed in
-   ADR-0005 / `@sasa/guardrails`.
+   ADR-0005 / `@wsa/guardrails`.
 
 ## References
 
@@ -239,17 +239,17 @@ does not satisfy primary-source corroboration.
 
 ### Enforcement
 
-The rule is reified in `@sasa/agent-xai`:
+The rule is reified in `@wsa/agent-xai`:
 
 - `XAI_NON_AUTHORITATIVE = true`
 - `GROKIPEDIA_PROHIBITED_EVIDENCE_KINDS = ['court-record',
-  'government-publication', 'statssa', 'commission']`
+'government-publication', 'statssa', 'commission']`
 - `GROKIPEDIA_ALLOWED_EVIDENCE_KINDS = ['news-article', 'other']`
 
-These two lists partition `EvidenceKindSchema` from `@sasa/schemas`
+These two lists partition `EvidenceKindSchema` from `@wsa/schemas`
 exactly — no `maybe` bucket. The invariants (frozen, disjoint,
 total) are covered by `xai-policy.spec.ts` at the adapter layer and
-are re-checked by `@sasa/guardrails` against `EvidenceKindSchema`.
+are re-checked by `@wsa/guardrails` against `EvidenceKindSchema`.
 
 ### Consequences
 

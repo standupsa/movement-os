@@ -1,6 +1,6 @@
 /**
  * Map xAI Chat Completions `finish_reason` values onto our normalized
- * `ResponseStatus` enum (see `@sasa/agent-contracts`).
+ * `ResponseStatus` enum (see `@wsa/agent-contracts`).
  *
  * Policy (intentionally identical to the OpenAI adapter — xAI's API is
  * Chat-Completions-compatible and reports the same vocabulary):
@@ -19,7 +19,7 @@
  * so audit logs keep provider-specific vocabulary.
  */
 
-import type { ResponseStatus } from '@sasa/agent-contracts';
+import type { ResponseStatus } from '@wsa/agent-contracts';
 
 const COMPLETED_REASONS: ReadonlySet<string> = new Set([
   'stop',

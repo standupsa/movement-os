@@ -1,5 +1,5 @@
 /**
- * @sasa/principles — the spine of the platform.
+ * @wsa/principles — the spine of the platform.
  *
  * The mission sentence and eight principles are the movement's public API.
  * Any change to these constants is a semver-major event, gated by Cause
@@ -91,7 +91,7 @@ function computeContentHash(): string {
 export function assertPinnedHash(expected: string): void {
   if (expected !== CONTENT_SHA256) {
     throw new Error(
-      `[@sasa/principles] content hash mismatch. expected=${expected} actual=${CONTENT_SHA256}. ` +
+      `[@wsa/principles] content hash mismatch. expected=${expected} actual=${CONTENT_SHA256}. ` +
         `Refusing to run: the mission/principles have drifted from the pinned build.`,
     );
   }

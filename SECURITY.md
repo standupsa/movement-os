@@ -29,7 +29,7 @@ announcement.
 - Bypasses of the human-approval gate or the audit log.
 - Any mechanism that causes the platform to publish an artefact without
   a valid `Approval` record.
-- Any mechanism that causes `@sasa/principles` hash verification to be
+- Any mechanism that causes `@wsa/principles` hash verification to be
   skipped at agent startup.
 - Leakage of witness or whistleblower material.
 - Injection or confused-deputy issues in the agent tool layer.

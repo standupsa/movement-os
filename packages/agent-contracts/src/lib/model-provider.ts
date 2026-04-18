@@ -2,8 +2,8 @@
  * `ModelProvider` — the one-function abstraction every LLM adapter must
  * satisfy. A single, typed, schema-validated request/response pair.
  *
- * Implementations live in sibling packages (`@sasa/agent-openai`,
- * `@sasa/agent-xai`, ...). Orchestration picks a provider per ADR-0003
+ * Implementations live in sibling packages (`@wsa/agent-openai`,
+ * `@wsa/agent-xai`, ...). Orchestration picks a provider per ADR-0003
  * lane and calls `complete()`; everything else — retries, circuit
  * breaking, caching, audit logging — layers above this interface.
  */

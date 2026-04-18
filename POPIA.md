@@ -20,7 +20,7 @@ surfaces it in the privacy notice shown to anyone submitting information.
 Every `Intake` record carries an explicit `lawfulBasis` field
 (`consent` | `public-interest` | `legal-obligation`). An intake without
 a lawful basis cannot be persisted. This is enforced by
-`@sasa/schemas.IntakeSchema`.
+`@wsa/schemas.IntakeSchema`.
 
 ## Minimisation
 

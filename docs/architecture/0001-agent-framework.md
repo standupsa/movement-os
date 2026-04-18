@@ -60,7 +60,7 @@ The platform must:
 ## Decision
 
 Adopt **OpenAI Agents SDK for TypeScript** (Option A) as the **default
-adapter**, wrapped behind an internal `@sasa/agent-contracts` interface.
+adapter**, wrapped behind an internal `@wsa/agent-contracts` interface.
 The movement's own agent definitions, tool schemas, and guardrails live
 in that internal interface; swapping to LangGraph or to a fully
 self-hosted inference stack (vLLM/Ollama) is a per-adapter change, not
@@ -72,7 +72,7 @@ a platform rewrite.
 
 - Permissive MIT licence across the chosen framework, our own code, and
   the core dependencies (Node, TypeScript, Zod, BullMQ, Postgres, Redis).
-- One small, auditable wrapper (`@sasa/agent-contracts`) is the only
+- One small, auditable wrapper (`@wsa/agent-contracts`) is the only
   place the platform depends on provider-specific shapes.
 - Human-in-the-loop and tracing are first-class features, not bolt-ons.
 - Contributors from adjacent communities (journalists, NGOs, other
@@ -95,9 +95,9 @@ a platform rewrite.
 
 ## Rollback
 
-Reverting this ADR means removing `@sasa/agent-openai` and picking a
+Reverting this ADR means removing `@wsa/agent-openai` and picking a
 different primary adapter. Because every agent in the repo depends only
-on `@sasa/agent-contracts`, the blast radius is the adapter package plus
+on `@wsa/agent-contracts`, the blast radius is the adapter package plus
 its tests. No agent definitions, tools, or schemas need to change.
 
 ## Validation

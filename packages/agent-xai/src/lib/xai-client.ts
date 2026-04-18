@@ -11,10 +11,10 @@
  *      only what we use.
  *   2. The contract between the adapter and whatever transport it uses
  *      is visible and reviewable in one file, independent of the
- *      sibling `@sasa/agent-openai` adapter.
+ *      sibling `@wsa/agent-openai` adapter.
  *
  * Keeping these shapes duplicated rather than extracted into a shared
- * `@sasa/agent-chat-completions` helper is deliberate: v1 ships two
+ * `@wsa/agent-chat-completions` helper is deliberate: v1 ships two
  * adapters, which is one below the threshold at which deduplication
  * pays for the coupling. The third adapter (Anthropic) will not share
  * this shape anyway.

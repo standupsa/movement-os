@@ -26,7 +26,7 @@ a named, timestamped, signed human approval.
 
 This sentence is the platform's public API. It is locked: changes are
 release-gated by the Cause Council and asserted by every agent at startup
-via `@sasa/principles` → `assertPinnedHash()`.
+via `@wsa/principles` → `assertPinnedHash()`.
 
 ## Principles
 
@@ -50,7 +50,7 @@ via `@sasa/principles` → `assertPinnedHash()`.
   movement.
 - **Provider-agnostic.** The default LLM adapter uses the OpenAI Agents SDK
   (MIT); a Claude adapter and a local-inference (Ollama/vLLM) adapter sit
-  behind the same `@sasa/agent-contracts` interface.
+  behind the same `@wsa/agent-contracts` interface.
 
 **Is not:**
 
@@ -67,9 +67,9 @@ apps/
   api/                # Fastify control plane  (scaffolded later)
   cli/                # operator CLI            (scaffolded later)
 packages/
-  principles/         # @sasa/principles  — mission + 8 principles (locked)
-  schemas/            # @sasa/schemas     — Zod contracts at every boundary
-  guardrails/         # @sasa/guardrails  — tone + evidence-promotion gates
+  principles/         # @wsa/principles  — mission + 8 principles (locked)
+  schemas/            # @wsa/schemas     — Zod contracts at every boundary
+  guardrails/         # @wsa/guardrails  — tone + evidence-promotion gates
   agent-contracts/    # (next) provider-agnostic Agent/Tool/Session interfaces
   agent-openai/       # (next) OpenAI Agents SDK adapter — the default
   agent-anthropic/    # (next) Claude adapter — for parity
@@ -100,8 +100,8 @@ pnpm nx run-many -t build
 Run a single package:
 
 ```sh
-pnpm nx run @sasa/guardrails:test --runInBand
-pnpm nx run @sasa/principles:build
+pnpm nx run @wsa/guardrails:test --runInBand
+pnpm nx run @wsa/principles:build
 ```
 
 Nx syncs TypeScript project references automatically. If you edit

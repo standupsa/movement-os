@@ -1,12 +1,12 @@
 /**
- * @sasa/guardrails — the tone-gate.
+ * @wsa/guardrails — the tone-gate.
  *
  * Every outbound artefact (post, letter, brief, script) runs through
  * checkTone() before it can be approved. The gate is deliberately
  * rule-based at v0.1: deterministic, auditable, and cheap. An LLM-backed
  * gate can be added later as a *second* check — not a replacement.
  *
- * Principle enforcement (see @sasa/principles):
+ * Principle enforcement (see @wsa/principles):
  *   - "disciplined": no slurs, no dehumanising language.
  *   - "non-violent": no incitement, no calls to violence, no martyr framing.
  *   - "non-racial": no race-essentialist framing of blame or rights.
@@ -16,7 +16,7 @@
  * That is the correct failure mode for a pre-publication gate.
  */
 
-import { PRINCIPLES, type PrincipleId } from '@sasa/principles';
+import { PRINCIPLES, type PrincipleId } from '@wsa/principles';
 
 export interface Violation {
   readonly principle: PrincipleId;

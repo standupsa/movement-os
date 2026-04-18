@@ -23,7 +23,7 @@ Please read:
 - Bug fixes with reproductions.
 - Tests — especially deterministic ones that close a gap.
 - Documentation improvements, especially to operator runbooks.
-- New agent adapters behind `@sasa/agent-contracts`.
+- New agent adapters behind `@wsa/agent-contracts`.
 - Translations of public-facing materials, by native speakers, with
   reviewer credit.
 
@@ -33,7 +33,7 @@ Please read:
 - Dependencies under source-available, fair-code, or non-OSI licences.
   The core is Apache-2.0 and stays that way.
 - Changes that weaken or bypass the human-approval gate.
-- Changes that weaken the `@sasa/principles` hash verification.
+- Changes that weaken the `@wsa/principles` hash verification.
 - New mass-publishing features without a corresponding audit-log entry.
 
 ## Development workflow
@@ -51,7 +51,7 @@ pnpm nx run-many -t typecheck
 Editing a package:
 
 ```sh
-pnpm nx run @sasa/<project>:test --runInBand
+pnpm nx run @wsa/<project>:test --runInBand
 ```
 
 Syncing TypeScript project references (run this if cross-package imports

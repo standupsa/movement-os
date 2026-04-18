@@ -16,7 +16,7 @@ const expectWarnedOnly = (result: ToneCheckResult): void => {
   expect(result.violations.every((v) => v.severity === 'warn')).toBe(true);
 };
 
-describe('@sasa/guardrails / checkTone', () => {
+describe('@wsa/guardrails / checkTone', () => {
   describe('clean text', () => {
     it('passes the mission sentence itself', () => {
       const result = checkTone(
@@ -40,7 +40,9 @@ describe('@sasa/guardrails / checkTone', () => {
 
   describe('dehumanising language (blocks)', () => {
     it('blocks "they are animals"', () => {
-      expectBlocked(checkTone('Those people are animals and should be dealt with.'));
+      expectBlocked(
+        checkTone('Those people are animals and should be dealt with.'),
+      );
     });
 
     it('blocks "sub-human"', () => {
@@ -70,7 +72,9 @@ describe('@sasa/guardrails / checkTone', () => {
 
   describe('unsourced universal claims (warns)', () => {
     it('warns on "every single"', () => {
-      expectWarnedOnly(checkTone('Every single public official is on the take.'));
+      expectWarnedOnly(
+        checkTone('Every single public official is on the take.'),
+      );
     });
   });
 

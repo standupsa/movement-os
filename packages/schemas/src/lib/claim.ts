@@ -9,22 +9,15 @@
  *   - `sourceRef` replaces V2's bare `intakeId`: a discriminated union
  *     naming the canonical source this claim is grounded in. `intake`
  *     and `artefact` are supported in phase 1; `event` will be added
- *     once `@sasa/events` ships.
+ *     once `@wsa/events` ships.
  *
  * Status vocabulary (V2 per ADR-0002) is unchanged. The V2 → V3 shape
  * migration lives in `./migrations/claim-v2-to-v3.ts`.
  */
 
 import { z } from 'zod';
-import {
-  ArtefactIdSchema,
-  ClaimIdSchema,
-  IntakeIdSchema,
-} from './ids.js';
-import {
-  BiTemporalFieldsObjectSchema,
-  refineBiTemporal,
-} from './common.js';
+import { ArtefactIdSchema, ClaimIdSchema, IntakeIdSchema } from './ids.js';
+import { BiTemporalFieldsObjectSchema, refineBiTemporal } from './common.js';
 
 /**
  * Evidential-completeness status, per ADR-0002.
@@ -74,8 +67,8 @@ export const ClaimSchema = ClaimCoreSchema.merge(BiTemporalFieldsObjectSchema)
     message: 'validFrom must be <= validTo',
     path: ['validTo'],
   })
-  .refine(
-    (c) => c.supersededBy === undefined || c.supersededBy !== c.id,
-    { message: 'a claim cannot supersede itself', path: ['supersededBy'] },
-  );
+  .refine((c) => c.supersededBy === undefined || c.supersededBy !== c.id, {
+    message: 'a claim cannot supersede itself',
+    path: ['supersededBy'],
+  });
 export type Claim = z.infer<typeof ClaimSchema>;

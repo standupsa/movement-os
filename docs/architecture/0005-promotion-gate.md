@@ -9,7 +9,7 @@
 ADR-0002 defines the evidential-completeness vocabulary. ADR-0003 defines the
 provider posture and the Grokipedia non-authoritative rule. ADR-0004 defines
 the append-only evidence graph and bi-temporal provenance. Until now, those
-three decisions described promotion policy in prose only. `@sasa/guardrails`
+three decisions described promotion policy in prose only. `@wsa/guardrails`
 enforced tone, but not the pre-publication evidence gate that decides whether a
 claim is even eligible to sit at `high-confidence` or `conclusive`.
 
@@ -28,12 +28,12 @@ prevents obviously invalid promotion states from reaching it.
 
 ## Decision
 
-`@sasa/guardrails` gains an evidence-promotion gate in
+`@wsa/guardrails` gains an evidence-promotion gate in
 `packages/guardrails/src/lib/evidence-gate.ts`.
 
 The gate evaluates a `Claim` together with a sidecar
 `EvidenceWithProvenance[]` input. The sidecar model deliberately lives in
-guardrails rather than `@sasa/schemas`: evidence-schema changes would be too
+guardrails rather than `@wsa/schemas`: evidence-schema changes would be too
 heavy for a v1 policy gate, while provider provenance is operational metadata
 about how the evidence bundle was assembled.
 
@@ -94,7 +94,7 @@ Negative:
 
 ## Rollout
 
-1. Add `evidence-gate.ts` and exhaustive unit tests in `@sasa/guardrails`.
-2. Wire `@sasa/schemas` and `@sasa/agent-xai` as guardrails dependencies.
+1. Add `evidence-gate.ts` and exhaustive unit tests in `@wsa/guardrails`.
+2. Wire `@wsa/schemas` and `@wsa/agent-xai` as guardrails dependencies.
 3. Re-export the gate from the package barrel.
 4. Keep the tone gate unchanged.

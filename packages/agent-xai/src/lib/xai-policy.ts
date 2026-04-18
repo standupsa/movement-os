@@ -19,16 +19,16 @@
  *     or `high-confidence` (ADR-0002).
  *
  * These constants are the single source of truth for the rule; the
- * `@sasa/guardrails` package imports them when evaluating promotion.
- * The two lists partition `EvidenceKindSchema` from `@sasa/schemas`
+ * `@wsa/guardrails` package imports them when evaluating promotion.
+ * The two lists partition `EvidenceKindSchema` from `@wsa/schemas`
  * exactly — there is no `maybe` bucket. Deliberate: we don't want
  * reviewers picking the ambiguous label to route around the rule.
  *
  * This file intentionally has zero runtime dependencies. Keeping the
  * lists as opaque string arrays (rather than importing `EvidenceKind`
- * from `@sasa/schemas`) avoids pulling a cross-package type dependency
+ * from `@wsa/schemas`) avoids pulling a cross-package type dependency
  * into the adapter layer. The disjoint-and-total invariant is checked
- * in `@sasa/guardrails` once both packages meet.
+ * in `@wsa/guardrails` once both packages meet.
  */
 
 export const XAI_NON_AUTHORITATIVE = true as const;

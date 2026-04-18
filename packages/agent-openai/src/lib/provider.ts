@@ -19,7 +19,7 @@
  *     SDK client (structurally compatible for the subset we use).
  *
  *   - Provider id is hard-coded to `'openai'`. A sibling adapter at
- *     `@sasa/agent-xai` will wire the same client shape to xAI's
+ *     `@wsa/agent-xai` will wire the same client shape to xAI's
  *     OpenAI-compatible endpoint and report `'xai'`.
  *
  *   - `timeoutMs` is enforced with an `AbortController` at the
@@ -38,7 +38,7 @@ import type {
   ModelProvider,
   ModelResponse,
   TokenUsage,
-} from '@sasa/agent-contracts';
+} from '@wsa/agent-contracts';
 import type { z } from 'zod';
 import { mapOpenAiFinishReason } from './finish-reason.js';
 import { zodToOpenAiJsonSchema } from './json-schema.js';

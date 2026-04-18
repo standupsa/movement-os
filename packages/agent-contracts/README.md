@@ -1,7 +1,7 @@
-# @sasa/agent-contracts
+# @wsa/agent-contracts
 
 Provider-agnostic contracts for LLM access. Defines the `ModelProvider`
-interface every adapter (`@sasa/agent-openai`, `@sasa/agent-xai`, ...) must
+interface every adapter (`@wsa/agent-openai`, `@wsa/agent-xai`, ...) must
 satisfy, plus the Zod schemas that keep requests and responses honest.
 
 ## What it contains
@@ -30,10 +30,7 @@ into the core contract early would overfit to one provider's shape.
 
 ```ts
 import { z } from 'zod';
-import {
-  createFakeProvider,
-  type ModelProvider,
-} from '@sasa/agent-contracts';
+import { createFakeProvider, type ModelProvider } from '@wsa/agent-contracts';
 
 const ExtractionSchema = z.object({
   claims: z.array(z.string()).min(1),
@@ -56,7 +53,7 @@ const response = await provider.complete({
 ## Building and testing
 
 ```sh
-pnpm nx run @sasa/agent-contracts:build
-pnpm nx run @sasa/agent-contracts:test
-pnpm nx run @sasa/agent-contracts:lint --max-warnings=0
+pnpm nx run @wsa/agent-contracts:build
+pnpm nx run @wsa/agent-contracts:test
+pnpm nx run @wsa/agent-contracts:lint --max-warnings=0
 ```

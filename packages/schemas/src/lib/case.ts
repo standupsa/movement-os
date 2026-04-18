@@ -31,7 +31,7 @@ export const CaseSchema = z
     title: z.string().min(1).max(200),
     summary: z.string().min(1).max(4000),
     status: CaseStatusSchema,
-    // SHA-256 of @sasa/principles at case creation; re-verified at mutation.
+    // SHA-256 of @wsa/principles at case creation; re-verified at mutation.
     principlesHash: Sha256HexSchema,
     createdAt: IsoTimestampSchema,
     updatedAt: IsoTimestampSchema,
