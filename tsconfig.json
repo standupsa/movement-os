@@ -23,6 +23,9 @@
     },
     {
       "path": "./packages/events"
+    },
+    {
+      "path": "./packages/email-ingress-worker"
     }
   ]
 }
