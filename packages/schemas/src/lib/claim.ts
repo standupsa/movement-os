@@ -36,9 +36,10 @@ export const ClaimStatusSchema = z.enum([
 export type ClaimStatus = z.infer<typeof ClaimStatusSchema>;
 
 export const ClaimExtractorSchema = z.enum([
-  'human',
+  'agent:evidence-engine',
   'agent:evidence-intake',
   'agent:source-verifier',
+  'human',
 ]);
 export type ClaimExtractor = z.infer<typeof ClaimExtractorSchema>;
 

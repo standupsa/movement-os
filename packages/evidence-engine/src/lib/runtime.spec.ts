@@ -88,10 +88,53 @@ describe('@wsa/evidence-engine', () => {
     expect(result.model).toBe('grok-4-fast-reasoning');
     expect(result.items).toHaveLength(1);
     expect(result.items[0]?.requestedStatus).toBe('contested');
+    expect(result.items[0]?.claim.extractedBy).toBe('agent:evidence-engine');
     expect(result.items[0]?.claim.status).toBe('contested');
     expect(result.items[0]?.promotion.ok).toBe(true);
     expect(result.items[0]?.auditTrail[0]?.action).toBe('claim.extracted');
     expect(result.items[0]?.auditTrail[1]?.action).toBe('evidence.linked');
+  });
+
+  it('uses the configured extractor id instead of a hard-coded provenance value', async () => {
+    const provider: ModelProvider = {
+      id: 'xai',
+      complete: <TSchema extends z.ZodType>(
+        args: CompleteArgs<TSchema>,
+      ): Promise<ModelResponse<z.infer<TSchema>>> =>
+        Promise.resolve({
+          value: args.schema.parse({
+            summary: 'One contestable extraction.',
+            claims: [
+              {
+                text: 'The family requested the record and was refused.',
+                status: 'contested',
+                supports: 'supports',
+                rationale:
+                  'The text describes a refusal but not a final adjudication.',
+              },
+            ],
+          }),
+          usage: { inputTokens: 11, outputTokens: 5, totalTokens: 16 },
+          provider: 'xai',
+          model: 'grok-4-fast-reasoning',
+          responseId: 'resp-001b',
+          rawFinishReason: 'stop',
+          status: 'completed',
+        }),
+    };
+
+    const engine = createEvidenceEngine({
+      provider,
+      extractorId: 'agent:source-verifier',
+      now: (): Date => FIXED_NOW,
+      createId: fixedIds(ulid('CLAIM1B'), ulid('EVID1B')),
+    });
+
+    const result = await engine.extractClaims(
+      makeInput({ requestId: 'req-001b' }),
+    );
+
+    expect(result.items[0]?.claim.extractedBy).toBe('agent:source-verifier');
   });
 
   it('downgrades xai-only promotable claims to contested when the promotion gate blocks them', async () => {

@@ -31,6 +31,15 @@ describe('ClaimSchema (V3, ADR-0004)', () => {
     }
   });
 
+  it('accepts agent:evidence-engine as a claim extractor', () => {
+    const result = ClaimSchema.safeParse({
+      ...baseClaimV3,
+      extractedBy: 'agent:evidence-engine' as const,
+      status: 'contested' as const,
+    });
+    expect(result.success).toBe(true);
+  });
+
   it('accepts an artefact-backed sourceRef', () => {
     const result = ClaimSchema.safeParse({
       ...baseClaimV3,
