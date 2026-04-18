@@ -1,6 +1,9 @@
 /* eslint-disable */
 import { readFileSync } from 'node:fs';
-const here = __dirname;
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+const here = dirname(fileURLToPath(import.meta.url));
 
 // Reading the SWC compilation config for the spec files
 const swcJestConfig = JSON.parse(readFileSync(`${here}/.spec.swcrc`, 'utf-8'));
