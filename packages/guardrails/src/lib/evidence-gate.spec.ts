@@ -11,7 +11,9 @@ import {
   PRIMARY_SOURCE_EVIDENCE_KINDS,
   checkEvidencePromotion,
   summarisePromotionResult,
+  type EvidencePromotionInput,
   type EvidenceWithProvenance,
+  type ProviderRun,
 } from './evidence-gate.js';
 
 const NOW = '2026-04-18T12:00:00+02:00';
@@ -63,12 +65,44 @@ function makeEntry(
 function makePromotionInput(
   status: ClaimStatus,
   evidence: ReadonlyArray<EvidenceWithProvenance>,
-) {
+  overrides: Partial<
+    Pick<EvidencePromotionInput, 'claimProducerProvider' | 'providerRuns'>
+  > = {},
+): EvidencePromotionInput {
+  const claim = makeClaim(status);
   return {
-    claim: makeClaim(status),
+    claim,
+    claimProducerProvider: overrides.claimProducerProvider ?? 'xai',
     evidence,
+    providerRuns:
+      overrides.providerRuns ??
+      makeProviderRunsForClaim(claim.id, {
+        analysis: 'xai',
+        challenge: 'openai',
+      }),
     now: NOW,
   };
+}
+
+function makeProviderRunsForClaim(
+  claimId: Claim['id'],
+  providers: {
+    analysis: ProviderRun['provider'];
+    challenge: ProviderRun['provider'];
+  },
+): ReadonlyArray<ProviderRun> {
+  return [
+    {
+      claimId,
+      provider: providers.analysis,
+      taskKind: 'analysis',
+    },
+    {
+      claimId,
+      provider: providers.challenge,
+      taskKind: 'challenge',
+    },
+  ];
 }
 
 describe('@wsa/guardrails / checkEvidencePromotion', () => {
@@ -273,6 +307,285 @@ describe('@wsa/guardrails / checkEvidencePromotion', () => {
       );
 
       expect(result.reasons.some((reason) => reason.code === 'R3')).toBe(false);
+    });
+  });
+
+  describe('R7 — challenge-lane enforcement', () => {
+    it('blocks conclusive when no challenge run is supplied', () => {
+      const result = checkEvidencePromotion(
+        makePromotionInput(
+          'conclusive',
+          [
+            makeEntry('01JSA7M1C4B6Y8D0E2F4G6H8M1', {
+              kind: 'court-record',
+            }),
+            makeEntry(
+              '01JSA7M1C4B6Y8D0E2F4G6H8M2',
+              { kind: 'other' },
+              { providerIds: ['xai'], modelGenerated: true },
+            ),
+          ],
+          { providerRuns: [] },
+        ),
+      );
+
+      expect(result.reasons).toContainEqual(
+        expect.objectContaining({ code: 'R7', severity: 'block' }),
+      );
+    });
+
+    it('blocks conclusive when the challenge run uses the same provider as analysis', () => {
+      const result = checkEvidencePromotion(
+        makePromotionInput(
+          'conclusive',
+          [
+            makeEntry('01JSA7M1C4B6Y8D0E2F4G6H8M3', {
+              kind: 'court-record',
+            }),
+            makeEntry(
+              '01JSA7M1C4B6Y8D0E2F4G6H8M4',
+              { kind: 'other' },
+              { providerIds: ['xai'], modelGenerated: true },
+            ),
+          ],
+          {
+            providerRuns: makeProviderRunsForClaim(makeClaim('conclusive').id, {
+              analysis: 'xai',
+              challenge: 'xai',
+            }),
+          },
+        ),
+      );
+
+      expect(result.reasons).toContainEqual(
+        expect.objectContaining({ code: 'R7', severity: 'block' }),
+      );
+    });
+
+    it('passes conclusive when a different-provider challenge run exists', () => {
+      const result = checkEvidencePromotion(
+        makePromotionInput('conclusive', [
+          makeEntry('01JSA7M1C4B6Y8D0E2F4G6H8M5', {
+            kind: 'court-record',
+          }, { providerIds: ['openai'], modelGenerated: false }),
+          makeEntry(
+            '01JSA7M1C4B6Y8D0E2F4G6H8M6',
+            { kind: 'other' },
+            { providerIds: ['xai'], modelGenerated: true },
+          ),
+        ]),
+      );
+
+      expect(result.ok).toBe(true);
+      expect(result.reasons.some((reason) => reason.code === 'R7')).toBe(false);
+    });
+
+    it('blocks high-confidence when the challenge run uses the same provider as analysis', () => {
+      const result = checkEvidencePromotion(
+        makePromotionInput(
+          'high-confidence',
+          [
+            makeEntry(
+              '01JSA7M1C4B6Y8D0E2F4G6H8M7',
+              { kind: 'news-article' },
+              { providerIds: ['openai'], modelGenerated: true },
+            ),
+            makeEntry(
+              '01JSA7M1C4B6Y8D0E2F4G6H8M8',
+              { kind: 'other' },
+              { providerIds: ['xai'], modelGenerated: true },
+            ),
+          ],
+          {
+            claimProducerProvider: 'openai',
+            providerRuns: makeProviderRunsForClaim(
+              makeClaim('high-confidence').id,
+              {
+                analysis: 'openai',
+                challenge: 'openai',
+              },
+            ),
+          },
+        ),
+      );
+
+      expect(result.reasons).toContainEqual(
+        expect.objectContaining({ code: 'R7', severity: 'block' }),
+      );
+    });
+
+    it('passes high-confidence when a different-provider challenge run exists', () => {
+      const result = checkEvidencePromotion(
+        makePromotionInput('high-confidence', [
+          makeEntry(
+            '01JSA7M1C4B6Y8D0E2F4G6H8M9',
+            { kind: 'court-record' },
+            { providerIds: ['openai'], modelGenerated: false },
+          ),
+          makeEntry(
+            '01JSA7M1C4B6Y8D0E2F4G6H8MA',
+            { kind: 'other' },
+            { providerIds: ['xai'], modelGenerated: true },
+          ),
+        ]),
+      );
+
+      expect(result.ok).toBe(true);
+      expect(result.reasons.some((reason) => reason.code === 'R7')).toBe(false);
+    });
+
+    it('blocks when mixed analysis history exists but the challenge only matches a different analysis provider', () => {
+      const claim = makeClaim('conclusive');
+      const result = checkEvidencePromotion({
+        claim,
+        claimProducerProvider: 'openai',
+        evidence: [
+          makeEntry(
+            '01JSA7M1C4B6Y8D0E2F4G6H8MC',
+            { claimId: claim.id, kind: 'court-record' },
+            { providerIds: ['openai'], modelGenerated: false },
+          ),
+          makeEntry(
+            '01JSA7M1C4B6Y8D0E2F4G6H8MD',
+            { claimId: claim.id, kind: 'other' },
+            { providerIds: ['xai'], modelGenerated: true },
+          ),
+        ],
+        providerRuns: [
+          { claimId: claim.id, provider: 'openai', taskKind: 'analysis' },
+          { claimId: claim.id, provider: 'xai', taskKind: 'analysis' },
+          {
+            claimId: claim.id,
+            provider: 'openai',
+            taskKind: 'challenge',
+          },
+        ],
+        now: NOW,
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.reasons).toContainEqual(
+        expect.objectContaining({ code: 'R7', severity: 'block' }),
+      );
+    });
+
+    it('passes when the claim-producing analysis provider is openai and challenge uses anthropic despite other analysis history', () => {
+      const claim = makeClaim('conclusive');
+      const result = checkEvidencePromotion({
+        claim,
+        claimProducerProvider: 'openai',
+        evidence: [
+          makeEntry(
+            '01JSA7M1C4B6Y8D0E2F4G6H8ME',
+            { claimId: claim.id, kind: 'court-record' },
+            { providerIds: ['openai'], modelGenerated: false },
+          ),
+          makeEntry(
+            '01JSA7M1C4B6Y8D0E2F4G6H8MF',
+            { claimId: claim.id, kind: 'other' },
+            { providerIds: ['xai'], modelGenerated: true },
+          ),
+        ],
+        providerRuns: [
+          { claimId: claim.id, provider: 'openai', taskKind: 'analysis' },
+          { claimId: claim.id, provider: 'xai', taskKind: 'analysis' },
+          {
+            claimId: claim.id,
+            provider: 'anthropic',
+            taskKind: 'challenge',
+          },
+        ],
+        now: NOW,
+      });
+
+      expect(result.ok).toBe(true);
+      expect(result.reasons.some((reason) => reason.code === 'R7')).toBe(false);
+    });
+
+    it('passes when the claim-producing analysis provider is xai and challenge uses openai despite other analysis history', () => {
+      const claim = makeClaim('conclusive');
+      const result = checkEvidencePromotion({
+        claim,
+        claimProducerProvider: 'xai',
+        evidence: [
+          makeEntry(
+            '01JSA7M1C4B6Y8D0E2F4G6H8MG',
+            { claimId: claim.id, kind: 'court-record' },
+            { providerIds: ['openai'], modelGenerated: false },
+          ),
+          makeEntry(
+            '01JSA7M1C4B6Y8D0E2F4G6H8MH',
+            { claimId: claim.id, kind: 'other' },
+            { providerIds: ['xai'], modelGenerated: true },
+          ),
+        ],
+        providerRuns: [
+          { claimId: claim.id, provider: 'xai', taskKind: 'analysis' },
+          { claimId: claim.id, provider: 'openai', taskKind: 'analysis' },
+          {
+            claimId: claim.id,
+            provider: 'openai',
+            taskKind: 'challenge',
+          },
+        ],
+        now: NOW,
+      });
+
+      expect(result.ok).toBe(true);
+      expect(result.reasons.some((reason) => reason.code === 'R7')).toBe(false);
+    });
+
+    it('blocks when the claim-producing analysis provider is xai and challenge also uses xai despite other analysis history', () => {
+      const claim = makeClaim('conclusive');
+      const result = checkEvidencePromotion({
+        claim,
+        claimProducerProvider: 'xai',
+        evidence: [
+          makeEntry(
+            '01JSA7M1C4B6Y8D0E2F4G6H8MJ',
+            { claimId: claim.id, kind: 'court-record' },
+            { providerIds: ['openai'], modelGenerated: false },
+          ),
+          makeEntry(
+            '01JSA7M1C4B6Y8D0E2F4G6H8MK',
+            { claimId: claim.id, kind: 'other' },
+            { providerIds: ['xai'], modelGenerated: true },
+          ),
+        ],
+        providerRuns: [
+          { claimId: claim.id, provider: 'xai', taskKind: 'analysis' },
+          { claimId: claim.id, provider: 'openai', taskKind: 'analysis' },
+          {
+            claimId: claim.id,
+            provider: 'xai',
+            taskKind: 'challenge',
+          },
+        ],
+        now: NOW,
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.reasons).toContainEqual(
+        expect.objectContaining({ code: 'R7', severity: 'block' }),
+      );
+    });
+
+    it('does not apply R7 to analysis-tier statuses', () => {
+      const result = checkEvidencePromotion(
+        makePromotionInput(
+          'contested',
+          [
+            makeEntry(
+              '01JSA7M1C4B6Y8D0E2F4G6H8MB',
+              { kind: 'other' },
+              { providerIds: ['xai'], modelGenerated: true },
+            ),
+          ],
+          { providerRuns: [] },
+        ),
+      );
+
+      expect(result.reasons.some((reason) => reason.code === 'R7')).toBe(false);
     });
   });
 

@@ -19,7 +19,7 @@ Thin orchestration layer for the first real xAI runtime path in
 ## What it does not do
 
 - no public branding / disclosure surface
-- no challenge-lane second provider yet
+- no challenge-lane orchestration yet
 - no persistence layer yet
 - no live publication path
 

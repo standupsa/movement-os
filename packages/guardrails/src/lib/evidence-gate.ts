@@ -1,3 +1,4 @@
+import type { AgentTaskKind, LlmProviderId } from '@wsa/agent-contracts';
 import {
   GROKIPEDIA_ALLOWED_EVIDENCE_KINDS,
   GROKIPEDIA_PROHIBITED_EVIDENCE_KINDS,
@@ -10,10 +11,8 @@ import {
   type EvidenceKind,
 } from '@wsa/schemas';
 
-export type ProviderId = 'openai' | 'xai' | 'anthropic' | 'local';
-
 export interface EvidenceProvenance {
-  readonly providerIds: ReadonlyArray<ProviderId>;
+  readonly providerIds: ReadonlyArray<LlmProviderId>;
   readonly modelGenerated: boolean;
 }
 
@@ -22,13 +21,29 @@ export interface EvidenceWithProvenance {
   readonly provenance: EvidenceProvenance;
 }
 
+export interface AnalysisProviderRun {
+  readonly provider: LlmProviderId;
+  readonly taskKind: Extract<AgentTaskKind, 'analysis'>;
+  readonly claimId: Claim['id'];
+}
+
+export interface ChallengeProviderRun {
+  readonly provider: LlmProviderId;
+  readonly taskKind: Extract<AgentTaskKind, 'challenge'>;
+  readonly claimId: Claim['id'];
+}
+
+export type ProviderRun = AnalysisProviderRun | ChallengeProviderRun;
+
 export interface EvidencePromotionInput {
   readonly claim: Claim;
+  readonly claimProducerProvider: LlmProviderId;
   readonly evidence: ReadonlyArray<EvidenceWithProvenance>;
+  readonly providerRuns: ReadonlyArray<ProviderRun>;
   readonly now: string;
 }
 
-export type PromotionRuleCode = 'R1' | 'R2' | 'R3' | 'R4' | 'R5' | 'R6';
+export type PromotionRuleCode = 'R1' | 'R2' | 'R3' | 'R4' | 'R5' | 'R6' | 'R7';
 
 export interface PromotionReason {
   readonly code: PromotionRuleCode;
@@ -91,6 +106,9 @@ export function checkEvidencePromotion(
   }
 
   if (PROMOTABLE_STATUSES.has(input.claim.status)) {
+    const providerRuns = input.providerRuns.filter(
+      (run) => run.claimId === input.claim.id,
+    );
     const supportingEvidence = activeEvidence.filter(
       (entry) => entry.evidence.supports === 'supports',
     );
@@ -125,6 +143,15 @@ export function checkEvidencePromotion(
         severity: 'block',
         message:
           'high-confidence and conclusive promotion require supporting evidence provenance from at least two distinct providers',
+      });
+    }
+
+    if (!hasDistinctChallengeLane(input.claimProducerProvider, providerRuns)) {
+      reasons.push({
+        code: 'R7',
+        severity: 'block',
+        message:
+          'high-confidence and conclusive promotion require at least one challenge-lane run from a provider different from the claim-producing analysis run',
       });
     }
 
@@ -228,14 +255,30 @@ function isXaiOnlyModelOutput(entry: EvidenceWithProvenance): boolean {
 
 function collectDistinctProviders(
   evidence: ReadonlyArray<EvidenceWithProvenance>,
-): ReadonlySet<ProviderId> {
-  const providers = new Set<ProviderId>();
+): ReadonlySet<LlmProviderId> {
+  const providers = new Set<LlmProviderId>();
   for (const entry of evidence) {
     for (const providerId of entry.provenance.providerIds) {
       providers.add(providerId);
     }
   }
   return providers;
+}
+
+function hasDistinctChallengeLane(
+  claimProducerProvider: LlmProviderId,
+  providerRuns: ReadonlyArray<ProviderRun>,
+): boolean {
+  for (const run of providerRuns) {
+    if (
+      run.taskKind === 'challenge' &&
+      run.provider !== claimProducerProvider
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function hasDestroyedRecordNote(

@@ -4,13 +4,16 @@
   "include": [],
   "references": [
     {
-      "path": "../agent-xai"
+      "path": "../schemas"
     },
     {
       "path": "../principles"
     },
     {
-      "path": "../schemas"
+      "path": "../agent-xai"
+    },
+    {
+      "path": "../agent-contracts"
     },
     {
       "path": "./tsconfig.lib.json"

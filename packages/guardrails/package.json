@@ -18,6 +18,7 @@
     "!**/*.tsbuildinfo"
   ],
   "dependencies": {
+    "@wsa/agent-contracts": "workspace:*",
     "@wsa/agent-xai": "workspace:*",
     "@wsa/principles": "workspace:^",
     "@wsa/schemas": "workspace:*",
