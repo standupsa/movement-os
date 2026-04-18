@@ -1,7 +1,7 @@
 # movement-os
 
-> *In memory of **Leon Eugene Haarhoff** (1973–1993). See [MEMORIAL.md](./MEMORIAL.md).*
-> *No family should have to start from zero.*
+> _In memory of **Leon Eugene Haarhoff** (1973–1993). See [MEMORIAL.md](./MEMORIAL.md)._
+> _No family should have to start from zero._
 
 **Witness South Africa — civic accountability platform.**
 
@@ -80,6 +80,7 @@ packages/
 workers/
   intake-worker/      # (next) BullMQ consumer
   draft-worker/       # (next) BullMQ consumer
+  email-ingest-worker/# (next) Cloudflare Email Worker + R2 ingress
 docs/
   architecture/       # ADRs (see 0001-agent-framework.md)
   ops/                # operational runbooks (DNS, Pages, domain setup)
@@ -125,6 +126,11 @@ the same licence; see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
   under the South African Protection of Personal Information Act.
 - [`docs/ops/dns-runbook.md`](./docs/ops/dns-runbook.md) — canonical DNS,
   GitHub Pages, and email-routing setup for `witnesssouthafrica.org`.
+- [`docs/architecture/0006-email-worker-ingress.md`](./docs/architecture/0006-email-worker-ingress.md)
+  — decision to replace the human inbox bootstrap with a Cloudflare Email
+  Worker and R2-backed ingress.
+- [`docs/ops/email-worker-runbook.md`](./docs/ops/email-worker-runbook.md) —
+  deployment prerequisites and acceptance checks for Email Worker ingress.
 - [`docs/ops/infisical/witness-south-africa/README.md`](./docs/ops/infisical/witness-south-africa/README.md)
   — local Infisical CLI layout and Cloudflare secret workflow for the
   `witness-south-africa` domain path.

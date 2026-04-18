@@ -77,6 +77,11 @@ Create these aliases:
 
 Route all three to the same hardened destination inbox for v1.
 
+This is a bootstrap only. The target architecture replaces the human inbox with
+a Cloudflare Email Worker that preserves inbound mail in R2. See
+[`docs/architecture/0006-email-worker-ingress.md`](../architecture/0006-email-worker-ingress.md)
+and [`docs/ops/email-worker-runbook.md`](./email-worker-runbook.md).
+
 Important:
 
 - Cloudflare Email Routing is inbound forwarding only.
