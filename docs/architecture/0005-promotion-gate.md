@@ -39,7 +39,7 @@ about how the evidence bundle was assembled.
 
 ## Rules
 
-The gate emits six rule outcomes:
+The gate emits seven rule outcomes:
 
 - `R1` block — xAI-only model output must not claim a primary-source evidence
   kind (`court-record`, `government-publication`, `statssa`, `commission`).
@@ -54,6 +54,9 @@ The gate emits six rule outcomes:
   contradicting evidence exists.
 - `R6` warn — `destroyed-or-missing-record-suspected` should carry at least one
   active supporting evidence note explaining the missing-record basis.
+- `R7` block — `high-confidence` and `conclusive` require at least one
+  challenge-lane run on the same claim from a provider different from the
+  analysis run.
 
 The gate also filters the candidate evidence set before evaluating those rules:
 
@@ -67,13 +70,16 @@ Provider independence at v1 is intentionally narrow:
 
 - it is measured as distinct provider identifiers on the active supporting
   evidence bundle
+- it also requires a caller-supplied `claimProducerProvider` for the claim
+  under evaluation, plus `providerRuns` proving that a `challenge` task ran
+  on the same claim with a provider different from that specific producer
 - it is not a claim about editorial independence, witness independence, or
   institutional independence
 
 This is a practical floor, not a complete theory of trust. Real evidentiary
 independence remains a human judgement. The gate is only responsible for
-rejecting obviously under-diversified model provenance when a promotable status
-is requested.
+rejecting obviously under-diversified model provenance and missing
+challenge-lane verification when a promotable status is requested.
 
 ## Consequences
 

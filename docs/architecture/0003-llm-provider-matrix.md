@@ -178,9 +178,11 @@ deployed surface actually invokes that path.
 - Hold the only copy of any sensitive artefact.
 
 These constraints are enforced by the `@wsa/guardrails` rules and by
-the `Approval` gate in `@wsa/schemas`. The guardrails will reject any
-task whose output would be published without a matching `Approval` and
-whose provenance records only one provider.
+the `Approval` gate in `@wsa/schemas`. The runtime enforcement now
+lives in `packages/guardrails/src/lib/evidence-gate.ts`, where
+promotion to `conclusive` / `high-confidence` is blocked unless the
+evidence bundle satisfies ADR-0005 and at least one challenge-lane run
+exists from a provider different from the claim-producing analysis run.
 
 ## Data handling
 
@@ -219,9 +221,11 @@ Rollout has now partially landed:
 1. `@wsa/agent-contracts` — `ModelProvider` interface, `AgentTaskKind`,
    `ModelResponse<T>`.
 2. `@wsa/agent-xai` — xAI adapter with telemetry / budget controls.
-3. Guardrails rule: promotion to `conclusive` / `high-confidence`
-   requires provenance from two distinct providers. Landed in
-   ADR-0005 / `@wsa/guardrails`.
+3. Guardrails rules in
+   `packages/guardrails/src/lib/evidence-gate.ts`: promotion to
+   `conclusive` / `high-confidence` requires supporting evidence from
+   two distinct providers plus a challenge-lane run from a different
+   provider. Landed in ADR-0005 / `@wsa/guardrails`.
 4. `@wsa/evidence-engine` — first real analysis-lane runtime path,
    consuming `@wsa/agent-xai` and immediately applying the promotion
    gate before returning audit-ready output.

@@ -293,7 +293,10 @@ function buildExtractedClaimRecord(args: {
 
   const promotion = checkEvidencePromotion({
     claim: provisionalClaim,
+    claimProducerProvider: args.providerId,
     evidence: [evidenceWithProvenance],
+    // TODO(ADR-0003): pass real analysis/challenge provider runs once challenge-lane orchestration exists.
+    providerRuns: [],
     now: args.occurredAt,
   });
   const effectiveStatus = shouldDowngradeStatus(requestedStatus, promotion)

@@ -64,6 +64,7 @@ export async function runProbe(input: ProbeInput): Promise<ProbeResult> {
     to: input.to,
     subject,
     text,
+    now,
     ...(input.fetch === undefined ? {} : { fetch: input.fetch }),
   });
 

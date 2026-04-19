@@ -13,6 +13,7 @@ export interface SendInput {
   readonly subject: string;
   readonly text: string;
   readonly fetch?: typeof fetch;
+  readonly now?: () => Date;
 }
 
 export interface SendResult {
@@ -52,6 +53,7 @@ const RESEND_EMAILS_URL = 'https://api.resend.com/emails';
 
 export async function sendProbe(input: SendInput): Promise<SendResult> {
   const fetchImpl = input.fetch ?? fetch;
+  const now = input.now ?? ((): Date => new Date());
   const response = await fetchImpl(RESEND_EMAILS_URL, {
     method: 'POST',
     headers: {
@@ -91,6 +93,6 @@ export async function sendProbe(input: SendInput): Promise<SendResult> {
     to: input.to,
     from: input.from,
     subject: input.subject,
-    sentAt: new Date().toISOString(),
+    sentAt: now().toISOString(),
   };
 }
