@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  checks: write
   pull-requests: read
 
 concurrency:
@@ -22,16 +23,18 @@ jobs:
     continue-on-error: true
     env:
       GH_TOKEN: ${{ github.token }}
-      EVENT_NAME: ${{ github.event_name }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Verify quorum signatures on current head
+        id: verify
         shell: bash
         run: |
           set -euo pipefail
 
-          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+          event_name="${{ github.event_name }}"
+
+          if [[ "$event_name" == "pull_request" ]]; then
             pr_number="${{ github.event.pull_request.number }}"
           else
             pr_number="${{ github.event.issue.number }}"
@@ -59,9 +62,79 @@ jobs:
             ' <<<"$comments_json"
           )"
 
+          {
+            echo "pr_head_sha=${pr_head_sha}"
+            echo "author_found=${author_found}"
+            echo "reviewer_found=${reviewer_found}"
+            echo "boss_found=${boss_found}"
+          } >> "$GITHUB_OUTPUT"
+
           echo "quorum-audit: author=${author_found} reviewer=${reviewer_found} boss=${boss_found} head=${pr_head_sha}"
 
           # TODO(ADR-0008): add lifecycle signature enforcement once an explicit lifecycle role exists.
           if [[ "$author_found" != "true" || "$reviewer_found" != "true" || "$boss_found" != "true" ]]; then
             exit 1
           fi
+
+      - name: Publish quorum-audit check-run on PR HEAD
+        if: always()
+        continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_HEAD_SHA: ${{ steps.verify.outputs.pr_head_sha }}
+          AUTHOR_FOUND: ${{ steps.verify.outputs.author_found }}
+          REVIEWER_FOUND: ${{ steps.verify.outputs.reviewer_found }}
+          BOSS_FOUND: ${{ steps.verify.outputs.boss_found }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${PR_HEAD_SHA}" ]]; then
+            echo "Skipping check-run publish because PR_HEAD_SHA is missing."
+            exit 0
+          fi
+
+          if [[ "${AUTHOR_FOUND}" == "true" && "${REVIEWER_FOUND}" == "true" && "${BOSS_FOUND}" == "true" ]]; then
+            conclusion="success"
+            title="Quorum signatures verified"
+          else
+            conclusion="failure"
+            title="Quorum signatures missing"
+          fi
+
+          summary="$(
+            cat <<EOF
+          author=${AUTHOR_FOUND}
+          reviewer=${REVIEWER_FOUND}
+          boss=${BOSS_FOUND}
+          head=${PR_HEAD_SHA}
+          EOF
+          )"
+
+          payload="$(
+            jq -n \
+              --arg name "quorum-audit" \
+              --arg head_sha "${PR_HEAD_SHA}" \
+              --arg status "completed" \
+              --arg conclusion "${conclusion}" \
+              --arg title "${title}" \
+              --arg summary "${summary}" \
+              '{
+                name: $name,
+                head_sha: $head_sha,
+                status: $status,
+                conclusion: $conclusion,
+                output: {
+                  title: $title,
+                  summary: $summary
+                }
+              }'
+          )"
+
+          if ! response="$(gh api "repos/${GITHUB_REPOSITORY}/check-runs" -X POST --input - <<<"${payload}" 2>&1)"; then
+            echo "Failed to publish quorum-audit check-run:"
+            echo "${response}"
+            exit 0
+          fi
+
+          echo "Published quorum-audit check-run on ${PR_HEAD_SHA} with conclusion=${conclusion}."
