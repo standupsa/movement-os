@@ -1,94 +1,131 @@
-# movement-os
+# Witness South Africa (`movement-os`)
 
-> _In memory of **Leon Eugene Haarhoff** (1973–1993). See [MEMORIAL.md](./MEMORIAL.md)._
-> _No family should have to start from zero._
+_No family should have to start from zero._
 
-**Witness South Africa — civic accountability platform.**
+Witness South Africa is a non-racial, non-violent, evidence-first civic
+accountability project. This repository is the operational backbone behind that
+doctrine: typed evidence handling, deterministic guardrails, private operator
+surfaces, and human-signoff governance. The agents are staff. Humans are
+accountable.
 
-`movement-os` is the open-source backbone of the Witness South Africa (WSA)
-movement. It is a small, auditable system of AI agents that act as **staff
-for the five pillars** of the movement:
+## Status
 
-- **Cause Council** — keeps the mission and principles locked.
-- **Evidence Unit** — ingests, verifies, and stores primary-source material.
-- **Media Engine** — drafts posts, letters, briefs, and scripts in the
-  movement's voice, always gated by a human approver.
-- **Community Network** — onboards coordinators and volunteers.
-- **Action Wing** — plans lawful petitions, campaigns, and public briefings.
-
-**The agents are staff. Humans are accountable.** Nothing publishes without
-a named, timestamped, signed human approval.
+This repository ships working package code on `packages/`, governance artefacts
+under `docs/architecture/` and `.github/workflows/`, field protocols under
+`docs/field/`, and the public landing page served via GitHub Pages. Cloudflare
+Email Routing, a Cloudflare Email Worker, R2-backed mail preservation, Resend
+for outbound probes, and Infisical for secrets are all in active use. The
+private extract API worker is in the repo and tested, but it is not yet
+deployed to `extract-api.witnesssouthafrica.org`. The heavier graph datastore
+and retrieval stack described in ADR-0004 is still planned rather than shipped.
 
 ## Mission
 
-> We stand for equal protection, equal dignity, and accountable government
-> for every South African — regardless of race, class, or politics.
+> We stand for equal protection, equal dignity, and accountable government for
+> every South African — regardless of race, class, or politics.
 
-This sentence is the platform's public API. It is locked: changes are
-release-gated by the Cause Council and asserted by every agent at startup
-via `@wsa/principles` → `assertPinnedHash()`.
+This sentence is the platform's public API. It is pinned in
+`@wsa/principles` and treated as release-governed doctrine.
 
 ## Principles
 
-1. **Non-racial.** We reject race as a basis for rights, blame, or allocation.
-2. **Constitutional.** We operate inside the Bill of Rights. No exceptions.
-3. **Non-violent.** Violence ends a human-rights movement. Full stop.
-4. **Truth-first.** Every public claim is sourced, dated, and verifiable.
-5. **Disciplined.** We argue from evidence, not insult.
-6. **Endurance.** We build for years, not news cycles.
-7. **Protection.** We shield witnesses, whistleblowers, and vulnerable members.
-8. **Family-first.** No member sacrifices their health, safety, or family
-   for the cause.
+1. Non-racial. Rights and duties do not turn on race.
+2. Constitutional. The Bill of Rights is the floor, not a suggestion.
+3. Non-violent. Violence destroys a human-rights movement.
+4. Truth-first. Public claims must be sourced, dated, and verifiable.
+5. Disciplined. Evidence outranks outrage.
+6. Endurance. The work is built for years, not news cycles.
+7. Protection. Witnesses, whistleblowers, and vulnerable families come first.
+8. Family-first. No one is expected to sacrifice their safety or family to
+   sustain the work.
 
-## What this repo is — and is not
+## Shipped stack
 
-**Is:**
-
-- A **civic accountability platform**: evidence intake, source verification,
-  drafting of human-approved content, signed audit log.
-- **Open source under Apache-2.0.** Fork it, run it, adapt it for your own
-  movement.
-- **Provider-agnostic.** The default LLM adapter uses the OpenAI Agents SDK
-  (MIT); a Claude adapter and a local-inference (Ollama/vLLM) adapter sit
-  behind the same `@wsa/agent-contracts` interface.
-
-**Is not:**
-
-- **Not** a persuasion-bot framework. See [`ACCEPTABLE_USE.md`](./ACCEPTABLE_USE.md).
-- **Not** an autonomous publisher. Every outbound artefact requires a
-  named human approval. No exceptions.
-- **Not** a political-party tool. The platform is non-partisan and
-  refuses to endorse, attack, or campaign for any party.
+- GitHub Pages for the public landing site.
+- Cloudflare Workers + R2 + Email Routing for operator-facing mail ingestion
+  and private worker surfaces.
+- Resend for outbound email probe delivery.
+- Infisical for secret distribution.
+- Nx + pnpm + TypeScript + Jest for the monorepo toolchain.
 
 ## Repo layout
 
-```text
-apps/
-  api/                # Fastify control plane  (scaffolded later)
-  cli/                # operator CLI            (scaffolded later)
-packages/
-  principles/         # @wsa/principles  — mission + 8 principles (locked)
-  schemas/            # @wsa/schemas     — Zod contracts at every boundary
-  guardrails/         # @wsa/guardrails  — tone + evidence-promotion gates
-  agent-contracts/    # @wsa/agent-contracts — provider-agnostic model contract
-  agent-xai/          # @wsa/agent-xai — xAI adapter + telemetry + budget gates
-  events/             # @wsa/events — append-only hash-chain utilities
-  agent-anthropic/    # (next) Claude adapter — for parity
-  evidence-engine/    # @wsa/evidence-engine — first xAI-backed extraction runtime
-  drafting-engine/    # (next) post/brief/script drafting
-  sources/            # (next) primary-source fetchers
-  audit/              # (next) append-only signed event log
-  email-ingress-worker/# @wsa/email-ingress-worker — CF Email Worker + R2 ingress
-  email-probe/        # @wsa/email-probe — machine-only MX-edge probe
-docs/
-  architecture/       # ADRs (see 0001-agent-framework.md)
-  ops/                # operational runbooks (DNS, Pages, domain setup)
-  threat-model/
-```
+- `packages/`
+  - `@wsa/agent-contracts` — provider-agnostic model contracts, schemas, and
+    test doubles for analysis/challenge adapters.
+  - `@wsa/agent-openai` — OpenAI-compatible adapter utilities, including
+    provider wiring and JSON-schema/finish-reason helpers.
+  - `@wsa/agent-xai` — provider adapter package with budget, telemetry, and
+    prompt-shaping helpers used by the current extraction runtime.
+  - `@wsa/email-ingress-worker` — Cloudflare Email Worker that writes inbound
+    alias traffic to R2 per ADR-0006.
+  - `@wsa/email-probe` — machine-only SMTP-to-R2 probe harness for verifying
+    the ingress path end to end.
+  - `@wsa/events` — append-only event-envelope, actor, canonicalisation, and
+    hash-chain utilities.
+  - `@wsa/evidence-engine` — current extraction runtime that turns redacted
+    source material into typed claims/evidence and immediately applies the
+    promotion gate.
+  - `@wsa/extract-api-worker` — private signed Cloudflare Worker surface for
+    Lane-2 evidence extraction per ADR-0007. Code shipped; deployment pending.
+  - `@wsa/guardrails` — deterministic publication and promotion gates,
+    including ADR-0005 rules and ADR-0003's challenge-lane enforcement.
+  - `@wsa/principles` — pinned mission/principles package and doctrine hash
+    assertion.
+  - `@wsa/schemas` — Zod schemas for claims, evidence, approvals, source
+    references, and related typed boundaries.
+- `docs/architecture/`
+  - ADRs `0001` through `0008`, covering agent framework, persistence,
+    provider posture, evidence graph direction, promotion gates, email ingress,
+    extract API surface, and the operational security model.
+- `docs/field/`
+  - human field-investigator protocols and working forms. These are explicitly
+    v0.1 working documents, not legal advice and not final rollout material.
+- `docs/ops/`
+  - operational runbooks for DNS, GitHub Pages, email worker deployment, and
+    Infisical secret handling.
+- `.github/workflows/`
+  - CI, report-only security scanners, and quorum-audit automation.
+- `CODEOWNERS`
+  - ADR-0008 governance ownership map. Honest note: with only one current
+    write-capable identity, it records intended ownership but does not create
+    real separation of powers yet.
+
+## Not shipped
+
+These items were previously implied or advertised but are not present as
+working surfaces at this SHA:
+
+- no `apps/` directory
+- no `apps/api`
+- no `apps/cli`
+- no `docs/threat-model/`
+- no Anthropic adapter package yet
+- no dedicated `drafting-engine`, `sources`, or `audit` packages
+
+## Planned
+
+- The Postgres + Apache AGE + pgvector evidence graph stack described in
+  ADR-0004.
+- Live deployment of `@wsa/extract-api-worker` to
+  `extract-api.witnesssouthafrica.org`.
+- Anthropic and local provider adapters beyond the currently shipped
+  packages.
+- Any future control-plane API or CLI surfaces, if and when they are actually
+  added to the repo.
+
+## Governance
+
+ADR-0008 is shipped. The repo has a root `CODEOWNERS` file and a
+`quorum-audit` workflow that checks for author/reviewer/controller signatures
+on the current PR head and publishes a PR-head check run. That is procedural
+ceremony backed by automation, not access-control enforcement: as of this SHA,
+there is still only one write-capable GitHub identity, so the audit trail is
+real but the separation of powers is not yet technical.
 
 ## Getting started
 
-Requires **Node 22+** and **pnpm 9+**.
+Requires Node 22+ and pnpm 9+.
 
 ```sh
 pnpm install
@@ -100,45 +137,26 @@ Run a single package:
 
 ```sh
 pnpm nx run @wsa/guardrails:test --runInBand
-pnpm nx run @wsa/principles:build
 pnpm nx run @wsa/evidence-engine:build
+pnpm nx run @wsa/email-ingress-worker:test --runInBand
 ```
 
-Nx syncs TypeScript project references automatically. If you edit
-cross-package imports and see stale references, run:
+If TypeScript project references drift after cross-package edits:
 
 ```sh
 pnpm nx sync
 ```
 
-## Licence
+## Policies and runbooks
 
-Apache-2.0 — see [`LICENSE`](./LICENSE). Contributions are accepted under
-the same licence; see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+- [ACCEPTABLE_USE.md](./ACCEPTABLE_USE.md)
+- [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+- [SECURITY.md](./SECURITY.md)
+- [POPIA.md](./POPIA.md)
+- [docs/ops/dns-runbook.md](./docs/ops/dns-runbook.md)
+- [docs/ops/email-worker-runbook.md](./docs/ops/email-worker-runbook.md)
+- [docs/ops/infisical/witness-south-africa/README.md](./docs/ops/infisical/witness-south-africa/README.md)
 
-## Governance and conduct
+## License
 
-- [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) — how we treat each other.
-- [`ACCEPTABLE_USE.md`](./ACCEPTABLE_USE.md) — what this software may and
-  may not be used for.
-- [`SECURITY.md`](./SECURITY.md) — how to report vulnerabilities safely.
-- [`POPIA.md`](./POPIA.md) — our commitments around personal information
-  under the South African Protection of Personal Information Act.
-- [`docs/ops/dns-runbook.md`](./docs/ops/dns-runbook.md) — canonical DNS,
-  GitHub Pages, and email-routing setup for `witnesssouthafrica.org`.
-- [`docs/architecture/0006-email-worker-ingress.md`](./docs/architecture/0006-email-worker-ingress.md)
-  — decision to replace the human inbox bootstrap with a Cloudflare Email
-  Worker and R2-backed ingress.
-- [`docs/ops/email-worker-runbook.md`](./docs/ops/email-worker-runbook.md) —
-  deployment prerequisites and acceptance checks for Email Worker ingress.
-- [`docs/ops/infisical/witness-south-africa/README.md`](./docs/ops/infisical/witness-south-africa/README.md)
-  — local Infisical CLI layout and Cloudflare secret workflow for the
-  `witness-south-africa` domain path.
-
-## Getting help and getting involved
-
-This is v0.1. The repo is deliberately small. If you want to help, start
-by reading the ADR in `docs/architecture/`, the acceptable-use policy,
-and opening an issue describing what you want to work on.
-
-Endurance over outrage. Build for years.
+Apache-2.0. See [LICENSE](./LICENSE).
