@@ -7,6 +7,13 @@ Use a new conversation for a new role or a new slice.
 GitHub quorum comments must use the parseable `Agent ...` prefix form,
 for example `Agent WS1`, `Agent R3`, and `Agent BOSS`.
 
+When these prompts are used for GitHub quorum comments, include the
+exact PR head SHA in the attestation text the workflow expects:
+
+- `Agent WS1: authored at <full-head-sha>`
+- `Agent R3: no findings on <full-head-sha>`
+- `Agent BOSS: concur at <full-head-sha>`
+
 ## BOSS
 
 ```text
@@ -105,7 +112,9 @@ Review focus:
 Output format:
 - Findings first, ordered by severity
 - Include file references
-- If there are no findings, say exactly: `Agent R3: no findings`
+- If there are no findings and this is a GitHub quorum pass, say
+  exactly: `Agent R3: no findings on <full-head-sha>`
+- Otherwise, use the exact no-findings form requested by the task
 - Then a short residual-risk note
 
 Rules:
