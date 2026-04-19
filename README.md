@@ -55,8 +55,8 @@ This sentence is the platform's public API. It is pinned in
     test doubles for analysis/challenge adapters.
   - `@wsa/agent-openai` — OpenAI-compatible adapter utilities, including
     provider wiring and JSON-schema/finish-reason helpers.
-  - `@wsa/agent-xai` — provider adapter package with budget, telemetry, and
-    prompt-shaping helpers used by the current extraction runtime.
+  - `@wsa/agent-xai` — in-repo provider adapter package with budget,
+    telemetry, and prompt-shaping helpers for internal runtime wiring.
   - `@wsa/email-ingress-worker` — Cloudflare Email Worker that writes inbound
     alias traffic to R2 per ADR-0006.
   - `@wsa/email-probe` — machine-only SMTP-to-R2 probe harness for verifying
