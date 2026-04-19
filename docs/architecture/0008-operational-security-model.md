@@ -116,6 +116,8 @@ Rollout happens in two phases:
 - add `quorum-audit.yml`
 - run `quorum-audit.yml` as report-only on PR open/update and on later
   quorum-comment events
+- publish the report-only `quorum-audit` result against the PR head SHA so
+  comment-triggered verification is visible on the PR surface
 - observe two clean PR runs
 
 ### Phase 2: enforced
