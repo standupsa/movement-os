@@ -118,10 +118,41 @@ working surfaces at this SHA:
 
 ADR-0008 is shipped. The repo has a root `CODEOWNERS` file and a
 `quorum-audit` workflow that checks for author/reviewer/controller signatures
-on the current PR head and publishes a PR-head check run. That is procedural
-ceremony backed by automation, not access-control enforcement: as of this SHA,
-there is still only one write-capable GitHub identity, so the audit trail is
-real but the separation of powers is not yet technical.
+on the current PR head across PR updates, issue comments, and review
+submissions, then publishes a PR-head check run. That is procedural ceremony
+backed by automation, not access-control enforcement: as of this SHA, there is
+still only one write-capable GitHub identity, so the audit trail is real but
+the separation of powers is not yet technical.
+
+### Role contract vs. v1 labels
+
+The governance model is defined by a four-role contract (see
+[ADR-0008](./docs/architecture/0008-operational-security-model.md#role-contract-and-v1-label-protocol)),
+not by the specific label strings used today:
+
+| Role (contract)           | Current v1 label on PR issue comments or review bodies |
+|---------------------------|--------------------------------------------------------|
+| author / worker           | `Agent WS1` or `Agent WS2`                             |
+| reviewer / critic         | `Agent R3`                                             |
+| controller / orchestrator | `Agent BOSS`                                           |
+| lifecycle / verifier      | `Agent L1` (intended, not yet enforced)                |
+
+The names `WS1`, `R3`, `BOSS`, `L1` are a v1 naming convention. They are
+project-specific, not a standard. Operationally, `quorum-audit.yml`
+currently parses those exact strings across both PR issue comments and
+PR review bodies (reviews in `DISMISSED` state are ignored). A rename
+is a coordinated workflow-plus-docs change, not a free-form edit.
+
+These governance roles are distinct from the **runtime agents** shipped
+under `packages/` (e.g. `@wsa/agent-openai`, `@wsa/agent-xai`). Runtime
+agents are product code that calls LLMs to process evidence; governance
+roles are PR-time attestations that process discipline happened.
+
+For the operator-facing workflow used to run repo tasks, see:
+
+- [docs/ops/agent-protocol.md](./docs/ops/agent-protocol.md)
+- [docs/ops/agent-cheat-sheet.md](./docs/ops/agent-cheat-sheet.md)
+- [docs/ops/agent-prompts.md](./docs/ops/agent-prompts.md)
 
 ## Getting started
 
@@ -155,6 +186,9 @@ pnpm nx sync
 - [POPIA.md](./POPIA.md)
 - [docs/ops/dns-runbook.md](./docs/ops/dns-runbook.md)
 - [docs/ops/email-worker-runbook.md](./docs/ops/email-worker-runbook.md)
+- [docs/ops/agent-protocol.md](./docs/ops/agent-protocol.md)
+- [docs/ops/agent-cheat-sheet.md](./docs/ops/agent-cheat-sheet.md)
+- [docs/ops/agent-prompts.md](./docs/ops/agent-prompts.md)
 - [docs/ops/infisical/witness-south-africa/README.md](./docs/ops/infisical/witness-south-africa/README.md)
 
 ## License
