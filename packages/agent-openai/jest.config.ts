@@ -1,3 +1,4 @@
+/** @jest-config-loader ts-node */
 /* eslint-disable */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
