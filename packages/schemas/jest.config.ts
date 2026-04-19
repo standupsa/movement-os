@@ -1,12 +1,12 @@
+/** @jest-config-loader ts-node */
 /* eslint-disable */
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
-
-const here = dirname(fileURLToPath(import.meta.url));
+import { join } from 'node:path';
 
 // Reading the SWC compilation config for the spec files
-const swcJestConfig = JSON.parse(readFileSync(`${here}/.spec.swcrc`, 'utf-8'));
+const swcJestConfig = JSON.parse(
+  readFileSync(join(__dirname, '.spec.swcrc'), 'utf-8'),
+);
 
 // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
 swcJestConfig.swcrc = false;
