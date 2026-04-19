@@ -11,6 +11,11 @@ Fast operator reference for the repo agent loop.
 | `R3` | Reviewer | Independently review the slice |
 | `L1` | Lifecycle | Verify repo truth and certify the slice |
 
+Attestation form:
+
+- GitHub quorum comments must use the parseable `Agent ...` prefix, for
+  example `Agent WS1`, `Agent R3`, and `Agent BOSS`.
+
 ## Default rules
 
 - New role -> new conversation

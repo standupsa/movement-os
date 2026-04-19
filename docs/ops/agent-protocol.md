@@ -41,6 +41,8 @@ Important:
 - The current labels are the repo's v1 protocol labels.
 - Today, `.github/workflows/quorum-audit.yml` still parses the current
   v1 labels verbatim.
+- On GitHub, attestation comments must use the parseable `Agent ...`
+  form, for example `Agent WS1`, `Agent R3`, and `Agent BOSS`.
 
 ## Core rules
 
