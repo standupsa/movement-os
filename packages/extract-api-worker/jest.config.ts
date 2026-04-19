@@ -1,10 +1,10 @@
 /* eslint-disable */
 import { readFileSync } from 'node:fs';
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 
-const here = dirname(fileURLToPath(import.meta.url));
-const swcJestConfig = JSON.parse(readFileSync(`${here}/.spec.swcrc`, 'utf-8'));
+const swcJestConfig = JSON.parse(
+  readFileSync(join(__dirname, '.spec.swcrc'), 'utf-8'),
+);
 
 swcJestConfig.swcrc = false;
 
