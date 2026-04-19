@@ -3,8 +3,10 @@ name: quorum-audit
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
   issue_comment:
-    types: [created, edited]
+    types: [created, edited, deleted]
 
 permissions:
   contents: read
@@ -12,12 +14,12 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: quorum-audit-${{ github.event_name == 'pull_request' && github.ref || format('pr-{0}', github.event.issue.number) }}
+  group: quorum-audit-pr-${{ github.event.pull_request.number || github.event.issue.number }}
   cancel-in-progress: true
 
 jobs:
   quorum-audit:
-    if: ${{ github.event_name == 'pull_request' || github.event.issue.pull_request != null }}
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_review' || github.event.issue.pull_request != null }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     continue-on-error: true
@@ -34,7 +36,7 @@ jobs:
 
           event_name="${{ github.event_name }}"
 
-          if [[ "$event_name" == "pull_request" ]]; then
+          if [[ "$event_name" == "pull_request" || "$event_name" == "pull_request_review" ]]; then
             pr_number="${{ github.event.pull_request.number }}"
           else
             pr_number="${{ github.event.issue.number }}"
@@ -42,24 +44,50 @@ jobs:
 
           pr_json="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${pr_number}")"
           pr_head_sha="$(jq -r '.head.sha' <<<"$pr_json")"
-          comments_json="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${pr_number}/comments")"
+          issue_comments_json="$(
+            gh api --paginate --slurp \
+              "repos/${GITHUB_REPOSITORY}/issues/${pr_number}/comments?per_page=100"
+          )"
+          reviews_json="$(
+            gh api --paginate --slurp \
+              "repos/${GITHUB_REPOSITORY}/pulls/${pr_number}/reviews?per_page=100"
+          )"
+
+          discussion_json="$(
+            jq -n \
+              --argjson issueComments "$issue_comments_json" \
+              --argjson reviews "$reviews_json" \
+              '[
+                ($issueComments[]?[]? | {body}),
+                ($reviews[]?[]? | select(.state != "DISMISSED") | {body: (.body // "")})
+              ]'
+          )"
+
+          issue_comments_scanned="$(
+            jq -n --argjson issueComments "$issue_comments_json" \
+              '[ $issueComments[]?[]? ] | length'
+          )"
+          reviews_scanned="$(
+            jq -n --argjson reviews "$reviews_json" \
+              '[ $reviews[]?[]? | select(.state != "DISMISSED") ] | length'
+          )"
 
           author_found="$(
             jq -r --arg sha "$pr_head_sha" '
               any(.[]; (.body // "") | test("^Agent WS[12]\\b.*\\b" + $sha + "\\b"; "m"))
-            ' <<<"$comments_json"
+            ' <<<"$discussion_json"
           )"
 
           reviewer_found="$(
             jq -r --arg sha "$pr_head_sha" '
               any(.[]; (.body // "") | test("^Agent R3:\\s+(no findings on|concur at) " + $sha + "\\b"; "m"))
-            ' <<<"$comments_json"
+            ' <<<"$discussion_json"
           )"
 
           boss_found="$(
             jq -r --arg sha "$pr_head_sha" '
               any(.[]; (.body // "") | test("^Agent BOSS:\\s+concur at " + $sha + "\\b"; "m"))
-            ' <<<"$comments_json"
+            ' <<<"$discussion_json"
           )"
 
           {
@@ -67,9 +95,11 @@ jobs:
             echo "author_found=${author_found}"
             echo "reviewer_found=${reviewer_found}"
             echo "boss_found=${boss_found}"
+            echo "issue_comments_scanned=${issue_comments_scanned}"
+            echo "reviews_scanned=${reviews_scanned}"
           } >> "$GITHUB_OUTPUT"
 
-          echo "quorum-audit: author=${author_found} reviewer=${reviewer_found} boss=${boss_found} head=${pr_head_sha}"
+          echo "quorum-audit: author=${author_found} reviewer=${reviewer_found} boss=${boss_found} head=${pr_head_sha} issue_comments=${issue_comments_scanned} reviews=${reviews_scanned}"
 
           # TODO(ADR-0008): add lifecycle signature enforcement once an explicit lifecycle role exists.
           if [[ "$author_found" != "true" || "$reviewer_found" != "true" || "$boss_found" != "true" ]]; then
@@ -86,6 +116,8 @@ jobs:
           AUTHOR_FOUND: ${{ steps.verify.outputs.author_found }}
           REVIEWER_FOUND: ${{ steps.verify.outputs.reviewer_found }}
           BOSS_FOUND: ${{ steps.verify.outputs.boss_found }}
+          ISSUE_COMMENTS_SCANNED: ${{ steps.verify.outputs.issue_comments_scanned }}
+          REVIEWS_SCANNED: ${{ steps.verify.outputs.reviews_scanned }}
         run: |
           set -euo pipefail
 
@@ -108,6 +140,9 @@ jobs:
           reviewer=${REVIEWER_FOUND}
           boss=${BOSS_FOUND}
           head=${PR_HEAD_SHA}
+          issue_comments_scanned=${ISSUE_COMMENTS_SCANNED}
+          reviews_scanned=${REVIEWS_SCANNED}
+          lifecycle=not-enforced
           EOF
           )"
 
