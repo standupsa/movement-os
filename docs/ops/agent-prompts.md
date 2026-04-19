@@ -4,6 +4,9 @@ Reusable prompt set for the current repo workflow.
 
 Use a new conversation for a new role or a new slice.
 
+GitHub quorum comments must use the parseable `Agent ...` prefix form,
+for example `Agent WS1`, `Agent R3`, and `Agent BOSS`.
+
 ## BOSS
 
 ```text
