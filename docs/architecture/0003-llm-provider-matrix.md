@@ -7,10 +7,11 @@
 
 ## Context
 
-ADR-0001 chose the OpenAI Agents SDK as the **default** agent framework,
-explicitly wrapped behind an internal `@wsa/agent-contracts` interface
-so the platform is never captured by a single vendor. That ADR did not
-pick concrete _model providers_. This one does.
+ADR-0001 chose a thin **`ModelProvider` contract** in
+`@wsa/agent-contracts` as the abstraction boundary, implemented by
+direct-REST adapters per provider, so the platform is never captured by
+a single vendor. That ADR did not pick concrete _model providers_. This
+one does.
 
 Three things force the decision:
 
@@ -242,8 +243,9 @@ Rollout has now partially landed:
 - xAI — function calling, structured outputs, reasoning features.
 - xAI Enterprise — SOC 2 Type 2, GDPR, CCPA, zero-retention
   configurations, DPA.
-- OpenAI Agents SDK — provider adapter surface is the correct
-  extension point for mixed-provider stacks.
+- OpenAI Agents SDK — considered in ADR-0001, not adopted; remains a
+  candidate second adapter behind the `ModelProvider` contract if we
+  ever need its handoffs / tracing / guardrails surface.
 - ADR-0001, ADR-0002, [`POPIA.md`](../../POPIA.md),
   [`ACCEPTABLE_USE.md`](../../ACCEPTABLE_USE.md).
 
