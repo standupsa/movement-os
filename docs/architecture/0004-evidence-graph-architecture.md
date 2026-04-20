@@ -64,9 +64,10 @@ hash chained to the previous event for that aggregate. The chain is
 the reason anyone — operator, journalist, court — can trust the
 record years from now.
 
-### 2. Storage: PostgreSQL + Apache AGE + pgvector, single datastore in phase 1
+### 2. Storage target: PostgreSQL + Apache AGE + pgvector, single datastore in phase 1
 
-Phase 1 runs on one Postgres instance with two open-source
+Phase 1 is intended to run on one Postgres instance with two
+open-source
 extensions:
 
 - **Apache AGE** provides openCypher graph traversal inside Postgres.
@@ -78,10 +79,11 @@ extensions:
   — transactional with the rest of the data.
 
 The canonical event log, the projected graph, and the vector indexes
-all live in the same Postgres database. One backup. One restore. One
-audit boundary. One POPIA boundary. A graph projection rebuild is a
-`DELETE FROM graph_* ; SELECT replay_projector()` inside a
-transaction, not a cross-system migration.
+are intended to live in the same Postgres database. One backup. One
+restore. One audit boundary. One POPIA boundary. The intended graph
+projection rebuild path is a `DELETE FROM graph_* ;
+SELECT replay_projector()` inside a transaction, not a cross-system
+migration.
 
 This choice is deliberate and narrow: **phase 1 optimises for
 boring, auditable, rebuildable infrastructure, not for graph-engine
@@ -115,10 +117,10 @@ a future refinement.
 
 ### 4. Hybrid retrieval from day one (phase 1 and phase 2 collapse)
 
-There is no "graph-only" phase. A graph that cannot be entered by
-name, by narrative description, or by docket number is not
-operationally useful. Phase 1 ships with three retrieval modes
-answering one `/retrieve` API:
+There is no "graph-only" phase in the target design. A graph that
+cannot be entered by name, by narrative description, or by docket
+number is not operationally useful. Phase 1 is intended to ship with
+three retrieval modes answering one `/retrieve` API:
 
 - **Text search** — Postgres full-text on artifact chunks and on
   canonical name fields.
@@ -128,11 +130,11 @@ answering one `/retrieve` API:
   projected graph, starting from entities the first two modes
   identified.
 
-A retrieval returns source-backed nodes and chunks, with provenance
-attached to every result. The retrieval layer does not synthesise,
-summarise, or narrate. Synthesis, if any, happens at a higher layer
-behind the `ModelProvider` contract of ADR-0003, with a schema that
-constrains the output to source-cited fields.
+The planned retrieval layer returns source-backed nodes and chunks,
+with provenance attached to every result. That layer does not
+synthesise, summarise, or narrate. Synthesis, if any, happens at a
+higher layer behind the `ModelProvider` contract of ADR-0003, with a
+schema that constrains the output to source-cited fields.
 
 ### 5. LLM policy in phase 1: structured extraction only
 
@@ -217,35 +219,37 @@ surface. Phase 1 adopts the model in the platform's own code.
 **Phase 1 and phase 2 collapse.** The original sketched plan had a
 "build the evidence graph" phase and a later "add hybrid retrieval"
 phase. That split is rejected. A graph without hybrid retrieval is
-not operationally useful. Phase 1 ships the graph with text, vector,
-and traversal retrieval together or it does not ship.
+not operationally useful. Phase 1 is intended to ship the graph with
+text, vector, and traversal retrieval together or it does not ship.
 
 **The graph projection is disposable.** The projected graph is a
 read-optimised view over the canonical event log. If the projection
 is corrupted, re-modelled, or migrated to a different engine, it is
 rebuilt from canonical events and artifacts. Nothing in the graph
-projection is a source of truth on its own. This property is tested
-by a periodic rebuild job that drops the projection and replays the
-log, comparing node and edge counts and sample hashes against a
-reference run.
+projection is a source of truth on its own. This is a desired
+property of the implementation. When the projector exists, it should
+be verified by a periodic rebuild job that drops the projection and
+replays the log, comparing node and edge counts and sample hashes
+against a reference run.
 
 ## Consequences
 
-**Positive.** One datastore through phase 1, which collapses backup,
-restore, and POPIA-boundary work. A clean story for regulators and
-journalists: every claim points to a canonical event; every event is
-append-only and hash-chained. Temporal queries ("what was believed
-when") are first-class from day one. The LLM is structurally
-prevented from becoming a parallel source of truth. The platform is
-portable — a later move to a dedicated graph engine replaces only the
-projection code, not the canonical log.
+**Positive.** If implemented as described, phase 1 would use one
+datastore, collapsing backup, restore, and POPIA-boundary work. It
+would also give a clean story for regulators and journalists: every
+claim points to a canonical event; every event is append-only and
+hash-chained. Temporal queries ("what was believed when") would be
+first-class from day one. The LLM would be structurally prevented
+from becoming a parallel source of truth. The platform would remain
+portable — a later move to a dedicated graph engine would replace
+only the projection code, not the canonical log.
 
-**Negative and bounded.** Postgres + AGE will be slower on deep
-traversals than a native graph engine at large corpus sizes.
+**Negative and bounded.** Postgres + AGE is expected to be slower on
+deep traversals than a native graph engine at large corpus sizes.
 Mitigated by the explicit commitment to revisit storage when measured
 workload demands it. Bi-temporal modelling adds upfront schema
 complexity; ADR-0002 already committed the platform to that level of
-rigour, so the cost is paid once. Hybrid retrieval requires three
+rigour, so the cost is paid once. Hybrid retrieval will require three
 indexes to be maintained in lock-step with the projector; this is a
 projector-level concern, not a retrieval-layer concern.
 
