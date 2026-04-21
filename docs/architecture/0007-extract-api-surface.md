@@ -1,6 +1,6 @@
 # 0007 — Extract API surface scoping
 
-- Status: draft
+- Status: accepted
 - Date: 2026-04-18
 - Relates to: [ADR-0001](./0001-agent-framework.md),
   [ADR-0003](./0003-llm-provider-matrix.md),
@@ -10,10 +10,11 @@
 ## Context
 
 `@wsa/evidence-engine` is now on `main` and provides the first real
-`guardrails -> @wsa/agent-xai` runtime path in code. What it does not
-yet have is a deployed operator-facing surface that actually invokes
-that path. Until such a surface exists and is exercised, xAI remains
-"runtime-ready in code" rather than "live in production".
+`guardrails -> @wsa/agent-xai` runtime path in code. The private
+operator-facing extract API now exists as a deployed Cloudflare Worker
+surface and has been exercised end-to-end. xAI is therefore live in
+production through this operator-only path, not merely runtime-ready in
+code.
 
 This ADR scopes the thinnest correct first deployed surface. It answers
 the five blocking unknowns before any implementation starts:
@@ -277,6 +278,13 @@ The implementation PR for this ADR must prove:
      `reason=budget_exhausted`
    - request does not fall through to a `500`
 
+Live proof for this ADR was established on `2026-04-20` via the
+redacted artifact bundle in
+[`artifacts/adr-0007-proof-20260420/`](../../artifacts/adr-0007-proof-20260420/),
+including signed `200`, unsigned `401`, promotion-decision evidence,
+and telemetry references for auth-failure, success, and
+budget-exhausted paths.
+
 ## Consequences
 
 Positive:
@@ -299,10 +307,12 @@ they buy honest proof, bounded spend, and a cleaner POPIA story.
 ## Rollout
 
 1. Deploy `extract-api.witnesssouthafrica.org` as a private Worker
-   route.
+   custom domain.
 2. Add HMAC verification and timestamp replay checks.
 3. Add Durable Object per-operator throttling.
 4. Add R2 telemetry sink (`wsa-telemetry`).
 5. Call `@wsa/evidence-engine.extractClaims()` from the Worker.
 6. Prove the five acceptance checks above.
 7. Only after that, start the brand/disclosure lane.
+
+Items 1-6 were completed on `2026-04-20`. Item 7 remains separate.

@@ -23,6 +23,7 @@ import {
   parseExtractRequestEnvelope,
 } from './schemas.js';
 import {
+  buildAuthFailureTelemetryRecord,
   buildBudgetExhaustedTelemetryRecord,
   buildErrorTelemetryRecord,
   buildSuccessTelemetryRecord,
@@ -75,6 +76,7 @@ export async function handleExtractRequest(
   let lease: Awaited<ReturnType<typeof acquireLease>> | undefined;
   let envelope: ExtractRequestEnvelope | undefined;
   let keyId = '';
+  const model = env.XAI_MODEL ?? DEFAULT_MODEL;
 
   try {
     const verified = await verifySignature(
@@ -95,7 +97,7 @@ export async function handleExtractRequest(
 
     const engine = createXaiEvidenceEngine({
       client: createClient(env),
-      model: env.XAI_MODEL ?? DEFAULT_MODEL,
+      model,
     });
     const result = await engine.extractClaims(envelope.extract);
     await writeTelemetry(
@@ -112,6 +114,16 @@ export async function handleExtractRequest(
     return jsonResponse(200, mapExtractionResultToResponse(result));
   } catch (error) {
     if (error instanceof AuthError) {
+      await writeTelemetry(
+        env.WSA_TELEMETRY,
+        toMonthKey(now()),
+        buildAuthFailureTelemetryRecord({
+          requestId: buildPreEnvelopeRequestId(now()),
+          keyId: readTelemetryKeyId(request),
+          model,
+          reason: error.reason,
+        }),
+      );
       return jsonResponse(401, { reason: error.reason });
     }
     if (error instanceof ExtractRequestValidationError) {
@@ -128,7 +140,7 @@ export async function handleExtractRequest(
           keyId,
           input: envelope.extract,
           sourceByteLength: sourceByteLengthForInput(envelope.extract),
-          model: env.XAI_MODEL ?? DEFAULT_MODEL,
+          model,
         }),
       );
       return jsonResponse(429, { reason: error.reason });
@@ -141,7 +153,7 @@ export async function handleExtractRequest(
           keyId,
           input: envelope.extract,
           sourceByteLength: sourceByteLengthForInput(envelope.extract),
-          model: env.XAI_MODEL ?? DEFAULT_MODEL,
+          model,
         }),
       );
     }
@@ -231,4 +243,18 @@ function parseJsonValue(rawBody: string): unknown {
 
 function jsonResponse(status: number, body: unknown): Response {
   return Response.json(body, { status });
+}
+
+function buildPreEnvelopeRequestId(now: Date): string {
+  return `auth-${now.getTime().toString(36)}`;
+}
+
+function readTelemetryKeyId(request: Request): string {
+  const keyId = request.headers.get('x-wsa-key-id')?.trim() ?? '';
+  if (keyId === '') {
+    return 'missing';
+  }
+
+  const safeKeyId = keyId.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 32);
+  return safeKeyId === '' ? 'provided' : safeKeyId;
 }
