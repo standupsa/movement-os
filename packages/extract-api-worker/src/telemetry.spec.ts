@@ -1,5 +1,6 @@
 import { ArtefactIdSchema, ulid } from '@wsa/schemas';
 import {
+  buildAuthFailureTelemetryRecord,
   buildBudgetExhaustedTelemetryRecord,
   buildErrorTelemetryRecord,
   buildSuccessTelemetryRecord,
@@ -102,6 +103,30 @@ describe('@wsa/extract-api-worker/telemetry', () => {
       outcome: 'error',
       inputTokens: 0,
       totalTokens: 0,
+    });
+  });
+
+  it('builds a minimal auth-failure telemetry record without source fields', () => {
+    expect(
+      buildAuthFailureTelemetryRecord({
+        requestId: 'auth-mtr9k',
+        keyId: 'missing',
+        model: 'grok-4-fast-reasoning',
+        reason: 'missing_signature_headers',
+      }),
+    ).toEqual({
+      requestId: 'auth-mtr9k',
+      keyId: 'missing',
+      provider: 'xai',
+      model: 'grok-4-fast-reasoning',
+      inputTokens: 0,
+      cachedInputTokens: 0,
+      outputTokens: 0,
+      totalTokens: 0,
+      outcome: 'error',
+      errorReason: 'missing_signature_headers',
+      httpStatus: 401,
+      stage: 'auth',
     });
   });
 
